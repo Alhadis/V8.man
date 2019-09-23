@@ -250,14 +250,22 @@ sub parseOpts {
 	return $output;
 }
 
+# No file-path supplied
+unless($ARGV[0]){
+	say "Usage: $0 /path/to/v8.1";
+	exit 1;
+}
+
+# Locate and load man-page source
+my $pagePath = $ARGV[0];
+-f $pagePath or die "Can't read $pagePath: bailing";
+
 $_ = `d8 --help`;
 s/\A(\w+=\d+\s*)+\n//;
 s/^\s*Synopsis:(.*?)\n(?=Options:)//si;
 s/\s*Options:(.+?)\s*\Z//si;
 my $opts = parseOpts($_);
 
-# Load man-page
-(my $pagePath = `man -w v8`) =~ s/\s+$//;
 my $source = do {{
 	local $/ = undef;
 	open(my $fh, $pagePath);

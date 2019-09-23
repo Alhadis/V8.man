@@ -20,6 +20,9 @@ Or clone this repository locally, symlink or prepend it to your `MANPATH`,
 print out the [spiffy PDF version][4], photocopy it a thousand times and
 mummify your co-worker... the usual.
 
+> **NOTE:** [`d8.1`](./d8.1) is just an alias for [`v8.1`](./v8.1), so that
+> `man d8` displays `man v8` instead of an error. Installing it is optional.
+
 
 Updating
 --------
@@ -39,5 +42,4 @@ seriously. Or notice/care about, for that matter.
 [1]: https://v8.dev/docs/d8
 [2]: https://github.com/Alhadis/.files
 [3]: https://linux.die.net/man/1/curl
-[4]: ./output/v8.1.pdf
-[5]: ./update.pl
+[4]: ./update.pl
