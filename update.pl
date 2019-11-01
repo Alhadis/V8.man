@@ -236,7 +236,7 @@ sub parseOpts {
 			$desc =~ s/^Add \K(calendar) and (numberingSystem)(?= to DateTimeFormat\.)/\\f(CW$1\\fP and \\f(CW$2\\fP/m;
 			$desc =~ s/^(?!\.).*?\s\K(Intl\.NumberFormat|DateTimeFormat)([.,]|(?:\h+|$))/\n.JS $1 $2\n/gm;
 			$desc =~ s/^\.JS +\S+\K\h+(?=[^.,\s])//gm;
-			$desc =~ s/^\.JS.+?\K\h{2,}(?=[.,]\h*$)/ /gm;
+			$desc =~ s/^\.JS.+?\K(?:\h{2,}(?=[.,]\h*$)|(?<=\w)(?=${punct}$))/ /gm;
 			$desc =~ s/(?<=\w)'(?=s )/\\(cq/g;
 			$desc =~ s/(\n\.(?:``|JS).+)\n+/$1\n/g;
 			$desc =~ s/\.\nU(?=se a fixed suppression string)/,\nand u/is;

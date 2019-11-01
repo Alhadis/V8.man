@@ -28,6 +28,9 @@
 .if '\*(.T'html'  .nr H 1
 .if '\*(.T'xhtml' .nr H 1
 .
+.\" Use monochrome hyperlinks
+.defcolor pdf:href.colour rgb 0.0 0.0 0.0
+.
 .\" More obvious tilde: \*~ instead of \(ap
 .ds ~ \(ap
 .
@@ -74,20 +77,22 @@
 .
 .\" Bare URL, underlined or hyperlinked
 .de LK
-.	ie t \{\
-.		UR \\$1
-.		UE \\$2 \}
-.	el \\fI\\$1\\fP\\$2
+'	ie '\*(.T'pdf' \l'\w,\\$1,u\(ul'\h'-\w,\\$1,u'\\$1\\$2
+'	el 'ie t \{\
+'		UR \\$1
+'		UE \\$2 \}
+'	el \\fI\\$1\\fP\\$2
 ..
 .
 .\" JavaScript object
 .de JS
 '	ds s https://mdn.io/\\$1
-'	ds n \\*(C?\\$1\\fP\\$2
 '	ie \\nH=1 <a href="\\*s"><code>\\$1</code></a>\\$2
-'	el .ie t \{\
+'	el 'ie '\*(.T'pdf' \{\
+'		pdfhref W -D "\\*s" -A \&\\$2 -- \\*(C?\\$1\\fP\}
+'	el 'ie t \{\
 '		UR \\*s
-\\*n
+\\*(C?\\$1\\fP\\$2
 '		UE \}
 '	el \\*(CR\\$1\fP\\$2
 .	rm s
@@ -142,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "November 1, 2019" "V8 7.8.279.17" V8
+.TH V8 1 "November 2, 2019" "V8 7.8.279.17" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -288,7 +293,7 @@ Don\(cqt use concurrent sweeping.
 .V8 correctness-fuzzer-suppressions
 Suppress certain unspecified behaviours to ease correctness fuzzing:
 abort program when the stack overflows or a string exceeds maximum length (as opposed to throwing
-.JS RangeError),
+.JS RangeError ),
 and use a fixed suppression string for error messages.
 
 .V8 cpu-profiler-sampling-interval | Int 1000
