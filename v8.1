@@ -114,7 +114,7 @@
 .	\}
 .	dX \\$1
 .	TP
-\\fB \-\-\\$1 \\fR
+\\*(CB \-\-\\$1 \\fR
 .	ie !'\\*T'' \{\
 .		B "Type:\t"
 \\*T
@@ -147,27 +147,67 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "November 2, 2019" "V8 7.8.279.17" V8
+.TH V8 1 "November 1, 2019" "V8 7.8.279.17" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
 .
 
 .SH SYNOPSIS
-.B shell
+.
+.\" Modify man(7) macros to respect monospace setting (controlled by `\n(CW` register)
+.nr CW 0
+.de B
+.	ie (\\n(CW=1) \\*(CB\\$*\fR
+.	el \fB\\$*\fR
+..
+.de I
+.	ie (\\n(CW=1) \\*(CI\\$*\fR
+.	el \fI\\$*\fR
+..
+.de BI
+.	ie (\\n(CW=1) \\*(CB\\$1\\*(CI\\$2\\*(CB\\$3\\*(CI\\$4\\*(CB\\$5\\*(CI\\$6\\*(CB\\$7\\*(CI\\$8\\*(CB\\$9\fR
+.	el \fB\\$1\fI\\$2\fB\\$3\fI\\$4\fB\\$5\fI\\$6\fB\\$7\fI\\$8\fB\\$9\fR
+..
+.de BR
+.	ie (\\n(CW=1) \\*(CB\\$1\\*(CW\\$2\\*(CB\\$3\\*(CW\\$4\\*(CB\\$5\\*(CW\\$6\\*(CB\\$7\\*(CW\\$8\\*(CB\\$9\fR
+.	el \fB\\$1\fR\\$2\fB\\$3\fR\\$4\fB\\$5\fR\\$6\fB\\$7\fR\\$8\fB\\$9\fR
+..
+.de IB
+.	ie (\\n(CW=1) \\*(CI\\$1\\*(CB\\$2\\*(CI\\$3\\*(CB\\$4\\*(CI\\$5\\*(CB\\$6\\*(CI\\$7\\*(CB\\$8\\*(CI\\$9\fR
+.	el \fI\\$1\fB\\$2\fI\\$3\fB\\$4\fI\\$5\fB\\$6\fI\\$7\fB\\$8\fI\\$9\fR
+..
+.de IR
+.	ie (\\n(CW=1) \\*(CI\\$1\\*(CW\\$2\\*(CI\\$3\\*(CW\\$4\\*(CI\\$5\\*(CW\\$6\\*(CI\\$7\\*(CW\\$8\\*(CI\\$9\fR
+.	el \fI\\$1\fR\\$2\fI\\$3\fR\\$4\fI\\$5\fR\\$6\fI\\$7\fR\\$8\fI\\$9\fR
+..
+.de RB
+.	ie (\\n(CW=1) \\*(CW\\$1\\*(CB\\$2\\*(CW\\$3\\*(CB\\$4\\*(CW\\$5\\*(CB\\$6\\*(CW\\$7\\*(CB\\$8\\*(CW\\$9\fR
+.	el \fR\\$1\fB\\$2\fR\\$3\fB\\$4\fR\\$5\fB\\$6\fR\\$7\fB\\$8\fR\\$9\fR
+..
+.de RI
+.	ie (\\n(CW=1) \\*(CW\\$1\\*(CI\\$2\\*(CW\\$3\\*(CI\\$4\\*(CW\\$5\\*(CI\\$6\\*(CW\\$7\\*(CI\\$8\\*(CW\\$9\fR
+.	el \fR\\$1\fI\\$2\fR\\$3\fI\\$4\fR\\$5\fI\\$6\fR\\$7\fI\\$8\fR\\$9\fR
+..
+.
+.nr CW 1
+.ie t .B shell\t
+.el   .B shell
 .RI [ options ]
 .RB [ \-\-shell ]
 .RI [ file... ]
 .br
-.B d8
+.ie t .B d8\t
+.el   .B d8\ \ \ \&
 .RI [ options ]
-.RB [ \-e
-.IR string ]
+.RB [ \-e\~ "\*(CIstring\fP]"
 .RB [ \-\-shell ]
-.RI [[ "\fB\-\-module\fP" ] " file..." ]
+.RI [[ "\*(CB\-\-module\fP" ] " file..." ]
+.nr CW 0
 .
 
 .SH OPTIONS
+.nr CW 1
 .TP 6
 .B \-\-
 Capture all remaining arguments in JavaScript.
@@ -182,9 +222,10 @@ Run an interactive JavaScript shell.
 Print flags and usage message to stdout, then exit.
 .TP
 .B \-\-module
-Execute \fIfile\fR as a JavaScript module.
+Execute \f(CIfile\fP as a JavaScript module.
 .IP
-Note: the \fB--module\fP option is implicitly enabled for \*(CW*.mjs\fP files.
+Note: the \f(CB\-\-module\fP option is implicitly enabled for \*(CW*.mjs\fP files.
+.nr CW 0
 .
 
 .SH V8 FLAGS
