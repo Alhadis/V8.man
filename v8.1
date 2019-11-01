@@ -202,13 +202,13 @@ Allow invoking the function constructor without security checks.
 Perform compaction on every full GC.
 
 .V8 always-opt
-Always try to optimize functions.
+Always try to optimise functions.
 
 .V8 always-osr
 Always try to OSR functions.
 
 .V8 no-analyze-environment-liveness
-Don\(cqt analyze liveness of environment slots and zap dead values.
+Don\(cqt analyse liveness of environment slots and zap dead values.
 
 .V8 arm-arch | String \(lqarmv8\(rq
 Generate instructions for the selected ARM architecture if available: armv6, armv7, armv7+sudiv or armv8.
@@ -245,7 +245,7 @@ Check icache flushes in ARM and MIPS simulator.
 Clear pending exceptions when entering JavaScript.
 
 .V8 clear-free-memory
-Initialize free memory with 0.
+Initialise free memory with 0.
 
 .V8 code-comments
 Emit comments in code disassembly; for more readable source positions you should add \*(C!--no-concurrent-recompilation\fP.
@@ -263,7 +263,7 @@ Enable compiler dispatcher.
 Don\(cqt free array buffer allocations on a background thread.
 
 .V8 concurrent-inlining
-Run optimizing compiler\(cqs inlining phase on a separate thread.
+Run optimising compiler\(cqs inlining phase on a separate thread.
 
 .V8 no-concurrent-marking
 Don\(cqt use concurrent marking.
@@ -304,7 +304,7 @@ Generate extra code (assertions) for debugging.
 Enable debugging the simulator.
 
 .V8 deopt-every-n-times | Int 0
-Deoptimize every n times a deopt point is passed.
+Deoptimise every n times a deopt point is passed.
 
 .V8 detailed-error-stack-trace
 Include arguments for each function call in the error stack frames array.
@@ -374,7 +374,7 @@ Disable use of LZCNT instruction if available.
 Deprecated (use \*(C!--arm-arch\fP instead).
 
 .V8 no-enable-one-shot-optimization
-Disable size optimizations for the code that will only be executed once.
+Disable size optimisations for the code that will only be executed once.
 
 .V8 no-enable-popcnt
 Disable use of POPCNT instruction if available.
@@ -472,7 +472,7 @@ Expose
 extension under the specified name.
 
 .V8 expose-externalize-string
-Expose externalize string extension.
+Expose \*(CWexternalize\fP string extension.
 
 .V8 expose-free-buffer
 Expose
@@ -507,7 +507,7 @@ Don\(cqt enable faster, potentially less accurate, math functions.
 Fast promote new space on high survival rates.
 
 .V8 feedback-normalization
-Feed back normalization to constructors.
+Feed back normalisation to constructors.
 
 .V8 no-flush-bytecode
 Don\(cqt flush bytecode that hasn\(cqt executed recently.
@@ -534,7 +534,7 @@ Implies all staged features that we want to ship in the not-too-far future.
 Print number of allocations and enable analysis mode for GC fuzz-testing, e.g. \*(C!--stress-marking\fP, \*(C!--stress-scavenge\fP.
 
 .V8 fuzzer-random-seed | Int 0
-Default seed for initializing fuzzer random generator (0, the default, means to use v8\(cqs random number generator seed).
+Default seed for initialising fuzzer random generator (0, the default, means to use v8\(cqs random number generator seed).
 
 .V8 gc-experiment-background-schedule
 Use new background GC schedule heuristics.
@@ -709,7 +709,7 @@ Don\(cqt elide bytecodes which won\(cqt have any external effect.
 Don\(cqt filter expression positions before the bytecode pipeline.
 
 .V8 no-ignition-reo
-Don\(cqt use ignition register equivalence optimizer.
+Don\(cqt use ignition register equivalence optimiser.
 
 .V8 no-ignition-share-named-property-feedback
 Don\(cqt share feedback slots when loading the same named property from the same object.
@@ -837,7 +837,7 @@ Ignore eager compilation hints.
 Maximum size of the old space (in MBytes).
 
 .V8 max-optimized-bytecode-size | Int 61440
-Maximum bytecode size to be considered for optimization; too high values may cause the compiler to hit (release) assertions.
+Maximum bytecode size to be considered for optimisation; too high values may cause the compiler to hit (release) assertions.
 
 .V8 max-polymorphic-map-count | Int 4
 Maximum number of maps to track in \*(CWPOLYMORPHIC\fP state.
@@ -892,13 +892,13 @@ Generate extra code for manipulating stats counters.
 Never perform compaction on full GC.
 
 .V8 no-opt
-Don\(cqt use adaptive optimizations.
+Don\(cqt use adaptive optimisations.
 
 .V8 optimize-for-size
 Enable optimisations which favour memory size over execution speed.
 
 .V8 no-page-promotion
-Don\(cqt promote pages based on utilization.
+Don\(cqt promote pages based on utilisation.
 
 .V8 page-promotion-threshold | Int 70
 Minimum percentage of live bytes on a page to enable fast evacuation.
@@ -965,7 +965,7 @@ Filter for selecting which functions to print bytecode.
 Print number of possible deopt points.
 
 .V8 print-opt-source
-Print source code of optimized and inlined functions.
+Print source code of optimised and inlined functions.
 
 .V8 print-wasm-code
 Print WebAssembly code.
@@ -986,7 +986,7 @@ Like \*(C!--prof\fP, but ignore generated code.
 Interval for \*(C!--prof\fP samples (in microseconds).
 
 .V8 profile-deserialization
-Print the time it takes to deserialize the snapshot.
+Print the time it takes to deserialise the snapshot.
 
 .V8 random-gc-interval | Int 0
 Collect garbage after \*(CBrandom\fP\*(CW(0,\fP
@@ -995,10 +995,10 @@ allocations.
 It overrides \*(C!--gc-interval\fP.
 
 .V8 random-seed | Int 0
-Default seed for initializing random generator (0, the default, means to use system random).
+Default seed for initialising random generator (0, the default, means to use system random).
 
 .V8 no-randomize-hashes
-Don\(cqt randomize hashes to avoid predictable hash collisions (with snapshots this option cannot override the baked-in seed).
+Don\(cqt randomise hashes to avoid predictable hash collisions (with snapshots this option cannot override the baked-in seed).
 
 .V8 redirect-code-traces
 Output deopt information and disassembly into file
@@ -1014,7 +1014,7 @@ Interpret all regexp code.
 Enable inline flags in regexp.
 
 .V8 no-regexp-optimization
-Don\(cqt generate optimized regexp code.
+Don\(cqt generate optimised regexp code.
 
 .V8 regexp-tier-up
 Enable regexp interpreter and tier up to the compiler.
@@ -1195,7 +1195,7 @@ Trace concurrent marking.
 Track concurrent recompilation.
 
 .V8 trace-deopt
-Trace optimize function deoptimization.
+Trace optimise function deoptimisation.
 
 .V8 trace-detached-contexts
 Trace native contexts that are expected to be garbage collected.
@@ -1246,7 +1246,7 @@ Trace object counts and memory usage.
 Print more details following each garbage collection.
 
 .V8 trace-generalization
-Trace map generalization.
+Trace map generalisation.
 
 .V8 trace-heap-broker
 Trace the heap broker (reports on missing data only).
@@ -1291,10 +1291,10 @@ Trace parallel marking for the young generation.
 Print mutator utilisation, allocation speed, GC speed.
 
 .V8 trace-opt
-Trace lazy optimization.
+Trace lazy optimisation.
 
 .V8 trace-opt-stats
-Trace lazy optimization statistics.
+Trace lazy optimisation statistics.
 
 .V8 trace-opt-verbose
 Extra verbose compilation tracing.
@@ -1358,7 +1358,7 @@ Trace TurboFan\(cqs register allocator.
 Trace TurboFan\(cqs control equivalence.
 
 .V8 trace-turbo-cfg-file | String NULL
-Trace turbo cfg graph (for C1 visualizer) to a given file name.
+Trace turbo cfg graph (for C1 visualiser) to a given file name.
 
 .V8 trace-turbo-filter | String \(lq*\(rq
 Filter for tracing turbofan compilation.
@@ -1376,7 +1376,7 @@ Trace TurboFan\(cqs jump threading.
 Trace TurboFan load elimination.
 
 .V8 trace-turbo-loop
-Trace TurboFan\(cqs loop optimizations.
+Trace TurboFan\(cqs loop optimisations.
 
 .V8 trace-turbo-path | String NULL
 Directory to dump generated TurboFan IR to.
@@ -1448,7 +1448,7 @@ Enable support for tracking retaining path.
 Disable TurboFan allocation folding.
 
 .V8 no-turbo-cf-optimization
-Don\(cqt optimize control flow in TurboFan.
+Don\(cqt optimise control flow in TurboFan.
 
 .V8 turbo-control-flow-aware-allocation
 Consider control flow while allocating registers.
@@ -1457,7 +1457,7 @@ Consider control flow while allocating registers.
 Disable escape analysis.
 
 .V8 turbo-filter | String \(lq*\(rq
-Optimization filter for TurboFan compiler.
+Optimisation filter for TurboFan compiler.
 
 .V8 no-turbo-inline-array-builtins
 Don\(cqt inline array builtins in TurboFan code.
@@ -1484,7 +1484,7 @@ Disable TurboFan loop rotation.
 Disable TurboFan loop variable optimisation.
 
 .V8 no-turbo-move-optimization
-Don\(cqt optimize gap moves in TurboFan.
+Don\(cqt optimise gap moves in TurboFan.
 
 .V8 turbo-profiling
 Enable profiling in TurboFan.
@@ -1602,7 +1602,7 @@ Disable stack checks (performance testing only).
 Number of parallel compilation tasks for WASM.
 
 .V8 wasm-opt
-Enable WASM optimization.
+Enable WASM optimisation.
 
 .V8 no-wasm-shared-code
 Don\(cqt share code underlying a WASM module when it is transferred.
@@ -1620,7 +1620,7 @@ Use streaming compilation instead of async compilation for tests.
 Bitmask of functions to compile with TurboFan instead of Liftoff.
 
 .V8 no-wasm-tier-up
-Disable WASM baseline compilation and tier up to the optimizing compiler.
+Disable WASM baseline compilation and tier up to the optimising compiler.
 
 .V8 no-wasm-trap-handler
 Don\(cqt use signal handlers to catch out of bounds memory access in WASM (currently Linux x86_64 only).

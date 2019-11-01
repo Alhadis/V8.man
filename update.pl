@@ -174,6 +174,8 @@ sub parseOpts {
 			$desc =~ s/Enables? optimi\Kz(ations?)(?=\h|$)/s$1/gm;
 			$desc =~ s/for \Kspecific CPU\.$/a specific CPU\./im;
 			$desc =~ s/ favo\Kr /u$&/gi;
+			$desc =~ s/(?:^|\h)(?!res|s)(?:\w+i|analy)\Kz(ers?|ed?|ing|ations?)\b/s$1/gi;
+			$desc =~ s/ \Kexternali[sz]e(?= )/\\*(CWexternalize\\fP/g;
 			$desc =~ s/(?<=Print mutator utili)\Kzation\b/sation/;
 			$desc =~ s/behavio\K(rs to ease correctness fuzzing:)\h+(A)/u$1\n\l$2/i;
 			$desc =~ s/, gc(?= speed\.)|(?<=target )os\./\U$&/gi;
