@@ -162,6 +162,8 @@ sub parseOpts {
 			$desc =~ s/\bmksnapshot\b/\\*(C!$&\\fP/g;
 			$desc =~ s/^Turbofan /TurboFan /gm;
 			$desc =~ s/^Print\Ks(?=\s)//gm;
+			$desc =~ s/^(Used with --perf-prof),\s*(load WASM source map and provide annotate support)/\u$2 when \l$1/i;
+			$desc =~ s/ source\K\h(?=map )/-/gi;
 			$desc =~ s/^Print number of allocations and enable\Ks (analysis mode for) gc fuzz (?=testing)/ $1 GC fuzz-/i;
 			$desc =~ s/\ADisable \Kglobal\.\Z/\n.JS global .\n/;
 			$desc =~ s/\((\d+) \+ (heap_growing_percent)\/100\)\.?/\n.EQ\n( $1 + $2 \/ 100 ).\n.EN\n/;
@@ -236,7 +238,8 @@ sub parseOpts {
 			$desc =~ s/(?<=\w)'(?=s )/\\(cq/g;
 			$desc =~ s/(\n\.(?:``|JS).+)\n+/$1\n/g;
 			$desc =~ s/\.\nU(?=se a fixed suppression string)/,\nand u/is;
-			$desc =~ s/^Freelist strategy to use\K:\h*/.\n/m;
+			$desc =~ s/^Freelist strategy to use\K:((?:\s+[0-9]:FreeList\w+\.?\h*)*)/.\nSupported values and their meanings are:\n.sp 1\n.nf\n$1\n.fi\n/m;
+			$desc =~ s/(?:^|\s+)([0-9]):(FreeList[A-Z]\w+)[.\h]*/\n\\fR$1\\fP\t\\*(C!$2\\fR/gm;
 			$desc =~ s/^([12])=([^\s.,]+)[.,]?$/\\*(C?$1\\fP selects \\*(C!$2\\fP,/igm;
 			$desc =~ s/^Anything else=([^\s.,]+)[.,]?$/and any other value selects \\*(C!$1\\fP.\n/igm;
 			$desc =~ s/\n+$//;

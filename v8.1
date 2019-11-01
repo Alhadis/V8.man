@@ -142,7 +142,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "October 5, 2019" "V8 7.7.299.13" V8
+.TH V8 1 "November 1, 2019" "V8 7.8.279.17" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -364,8 +364,8 @@ Disable use of BMI2 instructions if available.
 .V8 no-enable-fma3
 Disable use of FMA3 instructions if available.
 
-.V8 enable-lazy-source-positions
-Skip generating source positions during initial compile, but regenerate when actually required.
+.V8 no-enable-lazy-source-positions
+Don\(cqt skip generating source positions during initial compile, but regenerate when actually required.
 
 .V8 no-enable-lzcnt
 Disable use of LZCNT instruction if available.
@@ -500,9 +500,6 @@ Expose trigger-failure extension.
 .V8 no-expose-wasm
 Don\(cqt expose WASM interface to JavaScript.
 
-.V8 no-fast-calls-with-arguments-mismatches
-Don\(cqt skip arguments adaptor frames when it\(cqs provably safe.
-
 .V8 no-fast-math
 Don\(cqt enable faster, potentially less accurate, math functions.
 
@@ -549,11 +546,18 @@ Use less compaction in non-memory reducing mode.
 Specify the name of the file for fake gc mmap used in
 .`` ll_prof .
 
-.V8 gc-freelist-strategy | Int 0
+.V8 gc-freelist-strategy | Int 5
 Freelist strategy to use.
-\*(C?1\fP selects \*(C!FreeListFastAlloc\fP,
-\*(C?2\fP selects \*(C!FreeListMany\fP,
-and any other value selects \*(C!FreeListLegacy\fP.
+Supported values and their meanings are:
+.sp 1
+.nf
+\fR0\fP	\*(C!FreeListLegacy\fR
+\fR1\fP	\*(C!FreeListFastAlloc\fR
+\fR2\fP	\*(C!FreeListMany\fR
+\fR3\fP	\*(C!FreeListManyCached\fR
+\fR4\fP	\*(C!FreeListManyCachedFastPath\fR
+\fR5\fP	\*(C!FreeListManyCachedOrigin\fR
+.fi
 
 .V8 gc-global
 Always perform global GCs.
@@ -641,8 +645,11 @@ Enable
 .V8 no-harmony-namespace-exports
 Disable namespace exports (\f(CWexport * as foo from "bar"\fP).
 
-.V8 no-harmony-numeric-separator
-Disable numeric separator between digits.
+.V8 harmony-nullish (WIP)
+Enable nullish operator.
+
+.V8 harmony-optional-chaining (WIP)
+Enable optional chaining syntax.
 
 .V8 harmony-private-methods (WIP)
 Enable private methods in class literals.
@@ -717,6 +724,9 @@ Don\(cqt use incremental marking.
 
 .V8 no-incremental-marking-wrappers
 Don\(cqt use incremental marking for marking wrappers.
+
+.V8 initial-heap-size | size_t 0
+Initial size of the heap (in MBytes).
 
 .V8 initial-old-space-size | size_t 0
 Initial old space size (in MBytes).
@@ -923,6 +933,9 @@ Only report function code ranges to perf (i.e. no stubs).
 .V8 perf-prof
 Enable perf Linux profiler (experimental annotate support).
 
+.V8 perf-prof-annotate-wasm
+Load WASM source-map and provide annotate support when used with \*(C!--perf-prof\fP (experimental).
+
 .V8 perf-prof-unwinding-info
 Enable unwinding info for perf Linux profiler (experimental).
 
@@ -1002,6 +1015,9 @@ Enable inline flags in regexp.
 
 .V8 no-regexp-optimization
 Don\(cqt generate optimized regexp code.
+
+.V8 regexp-tier-up
+Enable regexp interpreter and tier up to the compiler.
 
 .V8 no-rehash-snapshot
 Don\(cqt rehash strings from the snapshot to override the baked-in seed.
@@ -1152,6 +1168,10 @@ Trace all use positions.
 Print stack trace after
 .VAR N
 free-list allocations.
+
+.V8 trace-allocations-origins
+Show statistics about the origins of allocations.
+Combine with \*(C!--no-inline-new\fP to track allocations from generated code.
 
 .V8 trace-asm-parser
 Verbose logging of asm.js parse failures.
@@ -1589,6 +1609,9 @@ Don\(cqt share code underlying a WASM module when it is transferred.
 
 .V8 no-wasm-shared-engine
 Don\(cqt share one WASM engine between all isolates within a process.
+
+.V8 wasm-staging
+Enable staged WASM features.
 
 .V8 wasm-test-streaming
 Use streaming compilation instead of async compilation for tests.
