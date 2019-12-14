@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "November 1, 2019" "V8 7.8.279.17" V8
+.TH V8 1 "December 14, 2019" "V8 7.9.317.31" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -236,6 +236,9 @@ pertain to a boolean V8 flag enabled by default.
 .\" BEGIN SCRAPE
 .V8 abort-on-uncaught-exception
 Abort program (dump core) when an uncaught exception is thrown.
+
+.V8 no-adjust-os-scheduling-parameters
+Don\(cqt adjust OS-specific scheduling parameters for the isolate.
 
 .V8 no-allocation-site-pretenuring
 Don\(cqt pretenure with allocation sites.
@@ -460,11 +463,6 @@ Number of fixpoint iterations it takes to switch to linear ephemeron algorithm.
 .V8 es-staging (INTERNAL)
 Enable test-worthy Harmony features.
 
-.V8 no-experimental-inline-promise-constructor
-Don\(cqt inline the
-.JS Promise
-constructor in TurboFan.
-
 .V8 experimental-new-space-growth-heuristic
 Grow the new space based on the percentage of survivors instead of their absolute value.
 
@@ -651,14 +649,6 @@ property.
 Add \f(CWcalendar\fP and \f(CWnumberingSystem\fP to
 .JS DateTimeFormat .
 
-.V8 no-harmony-intl-bigint
-Disable
-.JS BigInt.prototype.toLocaleString .
-
-.V8 no-harmony-intl-date-format-range
-Disable
-.JS DateTimeFormat.formatRange .
-
 .V8 harmony-intl-dateformat-day-period
 Add
 .`` dayPeriod
@@ -671,20 +661,10 @@ Add
 option to
 .JS DateTimeFormat .
 
-.V8 harmony-intl-dateformat-quarter (WIP)
-Add
-.`` quarter
-option to
-.JS DateTimeFormat .
-
-.V8 no-harmony-intl-datetime-style
-Disable \f(CWdateStyle\fP and \f(CWtimeStyle\fP for
-.JS DateTimeFormat .
-
-.V8 no-harmony-intl-numberformat-unified
-Disable unified
-.JS Intl.NumberFormat
-features.
+.V8 harmony-intl-other-calendars
+Enable other
+.JS DateTimeFormat
+calendars.
 
 .V8 harmony-intl-segmenter
 Enable
@@ -693,18 +673,21 @@ Enable
 .V8 no-harmony-namespace-exports
 Disable namespace exports (\f(CWexport * as foo from "bar"\fP).
 
-.V8 harmony-nullish (WIP)
+.V8 harmony-nullish
 Enable nullish operator.
 
-.V8 harmony-optional-chaining (WIP)
+.V8 harmony-optional-chaining
 Enable optional chaining syntax.
 
-.V8 harmony-private-methods (WIP)
+.V8 harmony-private-methods
 Enable private methods in class literals.
 
 .V8 no-harmony-promise-all-settled
 Disable
 .JS Promise.allSettled .
+
+.V8 harmony-regexp-match-indices (WIP)
+Enable regexp match indices.
 
 .V8 harmony-regexp-sequence (WIP)
 Enable RegExp Unicode sequence properties.
@@ -715,6 +698,10 @@ Disable
 
 .V8 no-harmony-shipping
 Disable all shipped Harmony features.
+
+.V8 harmony-top-level-await (WIP)
+Enable top-level
+.`` await .
 
 .V8 harmony-weak-refs (WIP)
 Enable weak references.
@@ -1045,6 +1032,9 @@ It overrides \*(C!--gc-interval\fP.
 .V8 random-seed | Int 0
 Default seed for initialising random generator (0, the default, means to use system random).
 
+.V8 randomize-all-allocations
+Randomise virtual memory reservations by ignoring any hints passed when allocating pages.
+
 .V8 no-randomize-hashes
 Don\(cqt randomise hashes to avoid predictable hash collisions (with snapshots this option cannot override the baked-in seed).
 
@@ -1064,8 +1054,15 @@ Enable inline flags in regexp.
 .V8 no-regexp-optimization
 Don\(cqt generate optimised regexp code.
 
-.V8 regexp-tier-up
-Enable regexp interpreter and tier up to the compiler.
+.V8 no-regexp-peephole-optimization
+Disable peephole optimisation for regexp bytecode.
+
+.V8 no-regexp-tier-up
+Disable regexp interpreter.
+The default behaviour is to tier-up to the compiler after the number of executions set by \*(C!--regexp-tier-up-ticks\fP
+
+.V8 regexp-tier-up-ticks | Int 1
+Set the number of executions for the regexp interpreter before tiering-up to the compiler.
 
 .V8 no-rehash-snapshot
 Don\(cqt rehash strings from the snapshot to override the baked-in seed.
@@ -1299,6 +1296,9 @@ Trace map generalisation.
 .V8 trace-heap-broker
 Trace the heap broker (reports on missing data only).
 
+.V8 trace-heap-broker-memory
+Trace the heap broker memory (refs analysis and zone numbers).
+
 .V8 trace-heap-broker-verbose
 Trace the heap broker verbosely (all reports).
 
@@ -1367,6 +1367,21 @@ Trace updates to prototype user tracking.
 
 .V8 trace-rail
 Trace RAIL mode.
+
+.V8 trace-regexp-assembler
+Trace regexp macro assembler calls.
+
+.V8 trace-regexp-bytecodes
+Trace regexp bytecode execution.
+
+.V8 trace-regexp-parser
+Trace regexp parsing.
+
+.V8 trace-regexp-peephole-optimization
+Trace regexp bytecode peephole optimisation.
+
+.V8 trace-regexp-tier-up
+Trace regexp tiering-up execution.
 
 .V8 trace-representation
 Trace representation types.
@@ -1498,8 +1513,8 @@ Disable TurboFan allocation folding.
 .V8 no-turbo-cf-optimization
 Don\(cqt optimise control flow in TurboFan.
 
-.V8 turbo-control-flow-aware-allocation
-Consider control flow while allocating registers.
+.V8 no-turbo-control-flow-aware-allocation
+Don\(cqt consider control flow while allocating registers.
 
 .V8 no-turbo-escape
 Disable escape analysis.
@@ -1570,6 +1585,9 @@ Verify register allocation in TurboFan.
 .V8 turbo-verify-machine-graph | String NULL
 Verify TurboFan machine graph before instruction selection.
 
+.V8 turboprop
+Enable experimental turboprop mid-tier compiler.
+
 .V8 no-unbox-double-arrays
 Don\(cqt automatically unbox arrays of doubles.
 
@@ -1613,11 +1631,14 @@ Disable garbage collection of WASM code.
 .V8 wasm-disable-structured-cloning
 Disable WASM structured cloning.
 
+.V8 no-wasm-far-jump-table
+Don\(cqt use multiple separate code spaces that might require far jumps between them.
+
 .V8 wasm-fuzzer-gen-test
 Generate a test case when running a WASM fuzzer.
 
-.V8 wasm-grow-shared-memory
-Allow growing shared WebAssembly memory objects.
+.V8 no-wasm-grow-shared-memory
+Forbid growing shared WebAssembly memory objects.
 
 .V8 wasm-interpret-all
 Execute all WASM code in the WASM interpreter.
@@ -1633,6 +1654,9 @@ Don\(cqt intrinsify some Math imports into WASM.
 
 .V8 wasm-max-code-space | Uint 1024
 Maximum committed code space for WASM (in MB).
+
+.V8 wasm-max-initial-code-space-reservation | Int 0
+Maximum size of the initial WASM code space reservation (in MB).
 
 .V8 wasm-max-mem-pages | Uint 32767
 Maximum number of 64KiB memory pages of a WASM instance.
@@ -1652,9 +1676,6 @@ Number of parallel compilation tasks for WASM.
 .V8 wasm-opt
 Enable WASM optimisation.
 
-.V8 no-wasm-shared-code
-Don\(cqt share code underlying a WASM module when it is transferred.
-
 .V8 no-wasm-shared-engine
 Don\(cqt share one WASM engine between all isolates within a process.
 
@@ -1668,7 +1689,7 @@ Use streaming compilation instead of async compilation for tests.
 Bitmask of functions to compile with TurboFan instead of Liftoff.
 
 .V8 no-wasm-tier-up
-Disable WASM baseline compilation and tier up to the optimising compiler.
+Disable WASM baseline compilation and tier-up to the optimising compiler.
 
 .V8 no-wasm-trap-handler
 Don\(cqt use signal handlers to catch out of bounds memory access in WASM (currently Linux x86_64 only).

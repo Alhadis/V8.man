@@ -108,6 +108,7 @@ sub parseOpts {
 					){
 						my $replacements_line = __LINE__ + 1;
 						my %replacements = (
+							"adjust-os-scheduling-parameters" => "Don't adjust OS-specific scheduling parameters for the isolate.",
 							"concurrent-recompilation" => "Force synchronous optimisation of hot functions.",
 							"idle-time-scavenge" => "Don't perform scavenges in idle time.",
 							"log-colour" => "Don't use coloured output when logging.",
@@ -119,10 +120,12 @@ sub parseOpts {
 							"prof-browser-mode" => "Turn off browser-compatible mode when profiling with --prof.",
 							"trace-maps-details" => "Don't log map details.",
 							"turbo-allocation-folding" => "Disable TurboFan allocation folding.",
+							"turbo-control-flow-aware-allocation" => "Don't consider control flow while allocating registers.",
 							"turbo-loop-peeling" => "Disable TurboFan loop peeling.",
 							"turbo-loop-rotation" => "Disable TurboFan loop rotation.",
 							"turbo-loop-variable" => "Disable TurboFan loop variable optimisation.",
 							"use-verbose-printer" => "Disable verbose printing",
+							"wasm-grow-shared-memory" => "Forbid growing shared WebAssembly memory objects.",
 						);
 						if(defined($replacements{$key})){
 							$desc = $replacements{$key};
@@ -164,6 +167,7 @@ sub parseOpts {
 			$desc =~ s/^Print\Ks(?=\s)//gm;
 			$desc =~ s/^(Used with --perf-prof),\s*(load WASM source map and provide annotate support)/\u$2 when \l$1/i;
 			$desc =~ s/ source\K\h(?=map )/-/gi;
+			$desc =~ s/ top\K\h(?=level[.\h])| tier(?:ing)?\K\h(?=up[.\h])/-/gi;
 			$desc =~ s/^Print number of allocations and enable\Ks (analysis mode for) gc fuzz (?=testing)/ $1 GC fuzz-/i;
 			$desc =~ s/\ADisable \Kglobal\.\Z/\n.JS global .\n/;
 			$desc =~ s/\((\d+) \+ (heap_growing_percent)\/100\)\.?/\n.EQ\n( $1 + $2 \/ 100 ).\n.EN\n/;
@@ -221,6 +225,7 @@ sub parseOpts {
 			$desc =~ s/code-<pid>-<isolate id>(\.asm\.?)/\n.RI \\(lqcode- pid - isolate-id $1\\(rq/g;
 			$desc =~ s/(?<=\h)(random)\(0,\h*([xX])\)\h*/\\*(CB$1\\fP\\*(CW(0,\\fP\n.VAR $2 )\n/g;
 			$desc =~ s/\bC\+\+/\\*(C+/g;
+			$desc =~ s/\btop-level\h+\Kawait($punct)?/\n.`` await $1\n/g;
 			$desc =~ s/(?<=Disable namespace exports \()[^)\n]+(?=\))/"\\f(CW" . ($& =~ tr|'"|"'|r) . "\\fP"/e;
 			$desc =~ s/^Disable \Khashbang(?= syntax\.$)/support for interpreter directive (hashbang)/m;
 			$desc =~ s/(?:Can|Don|Hasn|Won|Shouldn|Wouldn)\K'(?=t )/\\(cq/gi;
@@ -228,6 +233,7 @@ sub parseOpts {
 			$desc =~ s/ease correctness fuzzing: \KAbort/\L$&/i;
 			$desc =~ s/^(Include|Exclude)\Ks(?=\h)//gmi;
 			$desc =~ s/^(Disable|Enable) "(Add calendar and numberingSystem to DateTimeFormat)"/$2/mi;
+			$desc =~ s/^(Disable|Enable) "(DateTimeFormat) (other) (calendars)"/$1 $3 $2 $4/mi;
 			$desc =~ s/^(Disable|Enable) "(Unified Intl.NumberFormat )(Features)"/$1 \l$2\l$3/mi;
 			$desc =~ s/^(Disable|Enable)s /$1 /gmi;
 			$desc =~ s/^(?:Disable|Enable) \K"(\n\.JS[^\n]+)\n"([.,])/$1 $2/gm;
@@ -245,6 +251,12 @@ sub parseOpts {
 			$desc =~ s/^([12])=([^\s.,]+)[.,]?$/\\*(C?$1\\fP selects \\*(C!$2\\fP,/igm;
 			$desc =~ s/^Anything else=([^\s.,]+)[.,]?$/and any other value selects \\*(C!$1\\fP.\n/igm;
 			$desc =~ s/\n+$//;
+			
+			if($key eq "no-regexp-tier-up"){
+				$desc  = "Disable regexp interpreter.\n";
+				$desc .= "The default behaviour is to tier-up to the compiler after the number of executions set by";
+				$desc .= " \\*(C!--regexp-tier-up-ticks\\fP";
+			}
 		}
 		
 		$output .= ".V8 ${key}${flag} $typeArgs\n";
