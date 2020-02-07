@@ -257,6 +257,9 @@ sub parseOpts {
 				$desc .= "The default behaviour is to tier-up to the compiler after the number of executions set by";
 				$desc .= " \\*(C!--regexp-tier-up-ticks\\fP";
 			}
+			elsif($key eq "vtune-prof-annotate-wasm"){
+				$desc = "Load WebAssembly source-map and provide annotate support. Used when\n.`` v8_enable_vtunejit\nis enabled.\nExperimental.";
+			}
 		}
 		
 		$output .= ".V8 ${key}${flag} $typeArgs\n";
