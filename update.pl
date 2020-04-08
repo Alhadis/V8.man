@@ -109,6 +109,7 @@ sub parseOpts {
 						my $replacements_line = __LINE__ + 1;
 						my %replacements = (
 							"adjust-os-scheduling-parameters" => "Don't adjust OS-specific scheduling parameters for the isolate.",
+							"concurrent-array-buffer-sweeping" => "Don't sweep array buffers concurrently",
 							"concurrent-recompilation" => "Force synchronous optimisation of hot functions.",
 							"idle-time-scavenge" => "Don't perform scavenges in idle time.",
 							"log-colour" => "Don't use coloured output when logging.",
@@ -180,6 +181,7 @@ sub parseOpts {
 			$desc =~ s/ favo\Kr /u$&/gi;
 			$desc =~ s/(?:^|\h)(?!res|s)(?:\w+i|analy)\Kz(ers?|ed?|ing|ations?)\b/s$1/gi;
 			$desc =~ s/ \Kexternali[sz]e(?= )/\\*(CWexternalize\\fP/g;
+			$desc =~ s/nesting child seriali\Kz/s/g;
 			$desc =~ s/(?<=Print mutator utili)\Kzation\b/sation/;
 			$desc =~ s/behavio\K(rs to ease correctness fuzzing:)\h+(A)/u$1\n\l$2/i;
 			$desc =~ s/, gc(?= speed\.)|(?<=target )os\./\U$&/gi;
@@ -212,6 +214,7 @@ sub parseOpts {
 				) $punct \h*
 			/\n.JS $1 $2\n/gx;
 			$desc =~ s/"(Intl\.\w+)"(\.?)/\n.JS $1 $2\n/g;
+			$desc =~ s/"(Intl\.\w+)\h+([^"]+)"(\.?)/\n.JS $1\n$2$3/g;
 			$desc =~ s/sharedarraybuffer/SharedArrayBuffer/g;
 			$desc =~ s/"(well-formed) (JSON\.stringify)"\./$1\n.JS $2 ./;
 			$desc =~ s/"(RegExp Unicode sequence properties)"/$1/;

@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "February 7, 2020" "V8 8.0.426.16" V8
+.TH V8 1 "April 9, 2020" "V8 8.1.307.28" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -316,6 +316,9 @@ Enable compiler dispatcher.
 .V8 no-concurrent-array-buffer-freeing
 Don\(cqt free array buffer allocations on a background thread.
 
+.V8 no-concurrent-array-buffer-sweeping
+Don\(cqt sweep array buffers concurrently.
+
 .V8 concurrent-inlining
 Run optimising compiler\(cqs inlining phase on a separate thread.
 
@@ -353,6 +356,9 @@ The format is:
 
 .V8 debug-code
 Generate extra code (assertions) for debugging.
+
+.V8 debug-in-liftoff
+Use Liftoff instead of the \*(C+ interpreter for debugging WebAssembly (experimental).
 
 .V8 debug-sim
 Enable debugging the simulator.
@@ -494,12 +500,6 @@ Enable prototype multi-value support for WASM.
 
 .V8 experimental-wasm-return-call
 Enable prototype return call opcodes for WASM.
-
-.V8 no-experimental-wasm-sat-f2i-conversions
-Disable prototype saturating float conversion opcodes for WASM.
-
-.V8 no-experimental-wasm-se
-Disable prototype sign extension opcodes for WASM.
 
 .V8 experimental-wasm-simd
 Enable prototype SIMD opcodes for WASM.
@@ -659,9 +659,14 @@ Add
 option to
 .JS DateTimeFormat .
 
-.V8 harmony-intl-displaynames (WIP)
-Enable
+.V8 no-harmony-intl-displaynames
+Disable
 .JS Intl.DisplayNames .
+
+.V8 harmony-intl-displaynames-date-types (WIP)
+Enable
+.JS Intl.DisplayNames
+date types.
 
 .V8 no-harmony-intl-other-calendars
 Disable other
@@ -790,8 +795,8 @@ Don\(cqt use lazy compilation.
 .V8 no-lazy-feedback-allocation
 Don\(cqt allocate feedback vectors lazily.
 
-.V8 liftoff
-Enable Liftoff, the baseline compiler for WebAssembly.
+.V8 no-liftoff
+Disable Liftoff, the baseline compiler for WebAssembly.
 
 .V8 lite-mode
 Enable trade-off of performance for memory savings.
@@ -819,15 +824,6 @@ Log function events (parse, compile, execute) separately.
 
 .V8 log-handles
 Log global handle events.
-
-.V8 log-instruction-file | String \(lqarm64_inst.csv\(rq
-AArch64 instruction statistics log file.
-
-.V8 log-instruction-period | Int 4194304
-AArch64 instruction statistics logging period.
-
-.V8 log-instruction-stats
-Log AArch64 instruction statistics.
 
 .V8 log-internal-timer-events
 Time internal events.
@@ -882,6 +878,9 @@ Maximum number of maps to track in \*(CWPOLYMORPHIC\fP state.
 
 .V8 max-semi-space-size | size_t 0
 Maximum size of a semi-space (in MBytes), the new space consists of two semi-spaces.
+
+.V8 max-serializer-nesting | Int 25
+Maximum levels for nesting child serialisers.
 
 .V8 max-stack-trace-source-length | Int 300
 Maximum length of function source code printed in a stack trace.
@@ -961,21 +960,6 @@ Only parse the sources.
 
 .V8 no-partial-constant-pool
 Disable use of partial constant pools (X64 only).
-
-.V8 perf-basic-prof
-Enable perf Linux profiler (basic support).
-
-.V8 perf-basic-prof-only-functions
-Only report function code ranges to perf (i.e. no stubs).
-
-.V8 perf-prof
-Enable perf Linux profiler (experimental annotate support).
-
-.V8 perf-prof-annotate-wasm
-Load WASM source-map and provide annotate support when used with \*(C!--perf-prof\fP (experimental).
-
-.V8 perf-prof-unwinding-info
-Enable unwinding info for perf Linux profiler (experimental).
 
 .V8 no-polymorphic-inlining
 Disable polymorphic inlining.
@@ -1155,6 +1139,9 @@ Force marking at random points between 0 and
 .VAR X
 (inclusive) percent of the regular marking start limit.
 
+.V8 stress-per-context-marking-worklist
+Use per-context worklist for marking.
+
 .V8 stress-runs | Int 0
 Number of stress runs.
 
@@ -1179,6 +1166,10 @@ Don\(cqt emit asm.js related messages (for golden file testing).
 
 .V8 target-arch | String NULL
 The \*(C!mksnapshot\fP target architecture.
+(\*(C!mksnapshot\fP only).
+
+.V8 target-is-simulator
+Instruct \*(C!mksnapshot\fP that the target is meant to run in the simulator and it can generate simulator-specific instructions.
 (\*(C!mksnapshot\fP only).
 
 .V8 target-os | String NULL
@@ -1325,9 +1316,6 @@ The file to which the bytecode handler dispatch table is written (by default, th
 
 .V8 trace-incremental-marking
 Trace progress of the incremental marking.
-
-.V8 trace-liftoff
-Trace Liftoff, the baseline compiler for WebAssembly.
 
 .V8 trace-maps
 Trace map creation.
@@ -1483,9 +1471,6 @@ Trace garbage collection of WASM code.
 .V8 trace-wasm-memory
 Print all memory updates performed in WASM code.
 
-.V8 trace-wasm-serialization
-Trace serialization/deserialization.
-
 .V8 trace-zone-stats
 Trace zone memory usage.
 
@@ -1640,11 +1625,11 @@ Disable actual asynchronous compilation for
 .V8 wasm-atomics-on-non-shared-memory
 Allow atomic operations on non-shared WebAssembly memory.
 
+.V8 no-wasm-bounds-checks
+Disable bounds checks (disable for performance testing only).
+
 .V8 no-wasm-code-gc
 Disable garbage collection of WASM code.
-
-.V8 wasm-disable-structured-cloning
-Disable WASM structured cloning.
 
 .V8 no-wasm-far-jump-table
 Don\(cqt use multiple separate code spaces that might require far jumps between them.
@@ -1679,17 +1664,14 @@ Maximum number of 64KiB memory pages of a WASM instance.
 .V8 wasm-max-table-size | Uint 10000000
 Maximum table size of a WASM instance.
 
-.V8 wasm-no-bounds-checks
-Disable bounds checks (performance testing only).
-
-.V8 wasm-no-stack-checks
-Disable stack checks (performance testing only).
-
 .V8 wasm-num-compilation-tasks | Int 128
 Maximum number of parallel compilation tasks for WASM.
 
 .V8 wasm-opt
 Enable WASM optimisation.
+
+.V8 no-wasm-stack-checks
+Disable stack checks (disable for performance testing only).
 
 .V8 wasm-staging
 Enable staged WASM features.
@@ -1701,7 +1683,7 @@ Use streaming compilation instead of async compilation for tests.
 Bitmask of functions to compile with TurboFan instead of Liftoff.
 
 .V8 no-wasm-tier-up
-Disable WASM baseline compilation and tier-up to the optimising compiler.
+Disable tier-up to the optimising compiler (requires \*(C!--liftoff\fP to have an effect).
 
 .V8 no-wasm-trap-handler
 Don\(cqt use signal handlers to catch out of bounds memory access in WASM (currently Linux x86_64 only).
