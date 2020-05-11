@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "April 9, 2020" "V8 8.1.307.28" V8
+.TH V8 1 "May 11, 2020" "V8 8.4.327" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -243,6 +243,12 @@ Don\(cqt adjust OS-specific scheduling parameters for the isolate.
 .V8 no-allocation-site-pretenuring
 Don\(cqt pretenure with allocation sites.
 
+.V8 allow-natives-for-differential-fuzzing
+Only allow natives that\(cqre explicitly whitelisted for differential fuzzers.
+
+.V8 allow-natives-for-fuzzing
+Only allow natives that\(cqre explicitly whitelisted for fuzzers.
+
 .V8 allow-natives-syntax
 Allow natives syntax.
 
@@ -258,8 +264,8 @@ Always try to optimise functions.
 .V8 always-osr
 Always try to OSR functions.
 
-.V8 always-promote-young-mc
-Always promote young objects during mark-compact.
+.V8 no-always-promote-young-mc
+Don\(cqt promote young objects indiscriminately during mark-compact.
 
 .V8 no-analyze-environment-liveness
 Don\(cqt analyse liveness of environment slots and zap dead values.
@@ -313,6 +319,9 @@ Disable compilation cache.
 .V8 compiler-dispatcher
 Enable compiler dispatcher.
 
+.V8 concurrent-allocation
+Concurrently allocate in old space.
+
 .V8 no-concurrent-array-buffer-freeing
 Don\(cqt free array buffer allocations on a background thread.
 
@@ -356,9 +365,6 @@ The format is:
 
 .V8 debug-code
 Generate extra code (assertions) for debugging.
-
-.V8 debug-in-liftoff
-Use Liftoff instead of the \*(C+ interpreter for debugging WebAssembly (experimental).
 
 .V8 debug-sim
 Enable debugging the simulator.
@@ -433,8 +439,8 @@ Disable use of LZCNT instruction if available.
 .V8 enable-neon | maybe_bool unset
 Deprecated (use \*(C!--arm-arch\fP instead).
 
-.V8 no-enable-one-shot-optimization
-Disable size optimisations for the code that will only be executed once.
+.V8 enable-one-shot-optimization
+Enable size optimisations for code that will only be executed once.
 
 .V8 no-enable-popcnt
 Disable use of POPCNT instruction if available.
@@ -472,9 +478,6 @@ Number of fixpoint iterations it takes to switch to linear ephemeron algorithm.
 .V8 es-staging (INTERNAL)
 Enable test-worthy Harmony features.
 
-.V8 experimental-new-space-growth-heuristic
-Grow the new space based on the percentage of survivors instead of their absolute value.
-
 .V8 experimental-stack-trace-frames
 Enable experimental frames (API/Builtins) and stack trace layout.
 
@@ -494,6 +497,9 @@ Enable prototype compilation hints section for WASM.
 
 .V8 experimental-wasm-eh
 Enable prototype exception handling opcodes for WASM.
+
+.V8 experimental-wasm-gc
+Enable prototype garbage collection for WASM.
 
 .V8 experimental-wasm-mv
 Enable prototype multi-value support for WASM.
@@ -553,6 +559,9 @@ Fast promote new space on high survival rates.
 .V8 feedback-normalization
 Feed back normalisation to constructors.
 
+.V8 finalize-streaming-on-background
+Perform script streaming finalisation on the background thread.
+
 .V8 no-flush-bytecode
 Don\(cqt flush bytecode that hasn\(cqt executed recently.
 
@@ -579,6 +588,11 @@ Print number of allocations and enable analysis mode for GC fuzz-testing, e.g. \
 
 .V8 fuzzer-random-seed | Int 0
 Default seed for initialising fuzzer random generator (0, the default, means to use v8\(cqs random number generator seed).
+
+.V8 fuzzing
+Cause intrinsics to fail silently by returning
+.`` undefined
+for invalid usage.
 
 .V8 gc-experiment-background-schedule
 Use new background GC schedule heuristics.
@@ -643,55 +657,43 @@ Disable
 .JS import.meta
 property.
 
-.V8 no-harmony-intl-add-calendar-numbering-system
-Add \f(CWcalendar\fP and \f(CWnumberingSystem\fP to
-.JS DateTimeFormat .
-
 .V8 harmony-intl-dateformat-day-period
 Add
 .`` dayPeriod
 option to
 .JS DateTimeFormat .
 
-.V8 harmony-intl-dateformat-fractional-second-digits
-Add
+.V8 no-harmony-intl-dateformat-fractional-second-digits
+Don\(cqt add
 .`` fractionalSecondDigits
 option to
 .JS DateTimeFormat .
-
-.V8 no-harmony-intl-displaynames
-Disable
-.JS Intl.DisplayNames .
 
 .V8 harmony-intl-displaynames-date-types (WIP)
 Enable
 .JS Intl.DisplayNames
 date types.
 
-.V8 no-harmony-intl-other-calendars
-Disable other
-.JS DateTimeFormat
-calendars.
-
 .V8 harmony-intl-segmenter
 Enable
 .JS Intl.Segmenter .
 
+.V8 harmony-logical-assignment
+Enable logical assignment.
+
 .V8 no-harmony-namespace-exports
 Disable namespace exports (\f(CWexport * as foo from "bar"\fP).
 
-.V8 no-harmony-nullish
-Disable nullish operator.
-
-.V8 no-harmony-optional-chaining
-Disable optional chaining syntax.
-
-.V8 harmony-private-methods
-Enable private methods in class literals.
+.V8 no-harmony-private-methods
+Disable private methods in class literals.
 
 .V8 no-harmony-promise-all-settled
 Disable
 .JS Promise.allSettled .
+
+.V8 harmony-promise-any
+Enable
+.JS Promise.any .
 
 .V8 harmony-regexp-match-indices (WIP)
 Enable regexp match indices.
@@ -706,7 +708,7 @@ Disable
 .V8 no-harmony-shipping
 Disable all shipped Harmony features.
 
-.V8 harmony-string-replaceall (WIP)
+.V8 harmony-string-replaceall
 Enable
 .JS String.prototype.replaceAll .
 
@@ -714,8 +716,12 @@ Enable
 Enable top-level
 .`` await .
 
-.V8 harmony-weak-refs (WIP)
-Enable weak references.
+.V8 no-harmony-weak-refs
+Disable weak references.
+
+.V8 harmony-weak-refs-with-cleanup-some (WIP)
+Enable weak references with
+.JS FinalizationRegistry.prototype.cleanupSome .
 
 .V8 hash-seed | Uint64 0
 Fixed seed to use to hash property keys (0 means random).
@@ -739,14 +745,11 @@ Truncate strings to this length in the heap snapshot.
 .V8 histogram-interval | Int 600000
 Time interval in ms for aggregating memory histograms.
 
-.V8 huge-max-old-generation-size
-Increase maximum size of the old space to 4 GB for x64 systems with the physical memory bigger than 16 GB.
+.V8 no-huge-max-old-generation-size
+Don\(cqt increase maximum size of the old space to 4 GB for x64 systems with the physical memory bigger than 16 GB.
 
 .V8 no-icu-timezone-data
 Don\(cqt get information about timezones from ICU.
-
-.V8 no-idle-time-scavenge
-Don\(cqt perform scavenges in idle time.
 
 .V8 no-ignition-elide-noneffectful-bytecodes
 Don\(cqt elide bytecodes which won\(cqt have any external effect.
@@ -760,13 +763,23 @@ Don\(cqt use ignition register equivalence optimiser.
 .V8 no-ignition-share-named-property-feedback
 Don\(cqt share feedback slots when loading the same named property from the same object.
 
-.V8 ignore-asm-unimplemented-break
-Don\(cqt break for
-.`` ASM_UNIMPLEMENTED_BREAK
-macros.
-
 .V8 no-incremental-marking
 Don\(cqt use incremental marking.
+
+.V8 incremental-marking-hard-trigger | Int 0
+Threshold for starting incremental marking immediately in percent of available space:
+.EQ
+( "limit"\~ - \~ "size" ).
+.EN
+
+.V8 incremental-marking-soft-trigger | Int 0
+Threshold for starting incremental marking via a task in percent of available space:
+.EQ
+( "limit"\~ - \~ "size" ).
+.EN
+
+.V8 no-incremental-marking-task
+Don\(cqt use tasks for incremental marking.
 
 .V8 no-incremental-marking-wrappers
 Don\(cqt use incremental marking for marking wrappers.
@@ -803,6 +816,9 @@ Enable trade-off of performance for memory savings.
 
 .V8 ll-prof
 Enable low-level Linux profiler.
+
+.V8 local-heaps
+Allow heap access from background tasks.
 
 .V8 log
 Minimal logging (no API, code, GC, suspect, or handles samples).
@@ -986,6 +1002,9 @@ Filter for selecting which functions to print bytecode.
 .V8 print-deopt-stress
 Print number of possible deopt points.
 
+.V8 print-nci-code
+Print native context-independent code.
+
 .V8 print-opt-source
 Print source code of optimised and inlined functions.
 
@@ -1025,6 +1044,12 @@ Randomise virtual memory reservations by ignoring any hints passed when allocati
 .V8 no-randomize-hashes
 Don\(cqt randomise hashes to avoid predictable hash collisions (with snapshots this option cannot override the baked-in seed).
 
+.V8 rcs
+Report runtime call-counts and times.
+
+.V8 rcs-cpu-time
+Report runtime times in CPU time (the default is wall-time).
+
 .V8 redirect-code-traces
 Output deopt information and disassembly into file
 .RI \(lqcode- pid - isolate-id .asm.\(rq
@@ -1062,11 +1087,20 @@ Keeps maps alive for
 .VAR N
 old space garbage collections.
 
+.V8 reuse-opt-code-count | Int 0
+Don\(cqt discard optimised code for the specified number of deopts.
+
 .V8 runtime-call-stats
-Report runtime call counts and times.
+Report runtime call-counts and times.
 
 .V8 sampling-heap-profiler-suppress-randomness
 Use constant sample intervals to eliminate test flakiness.
+
+.V8 no-scavenge-task
+Don\(cqt schedule scavenge tasks.
+
+.V8 scavenge-task-trigger | Int 80
+Scavenge task trigger in percent of the current heap limit.
 
 .V8 no-script-streaming
 Disable parsing on background.
@@ -1110,6 +1144,9 @@ Write V8 startup as \*(C+ src.
 Simulator stop after
 .VAR X
 number of instructions.
+
+.V8 stress-background-compile
+Stress-test background parsing.
 
 .V8 stress-compaction
 Stress the GC compactor to flush out bugs (implies \*(C!--force-marking-deque-overflows\fP).
@@ -1435,6 +1472,9 @@ Trace TurboFan load elimination.
 .V8 trace-turbo-loop
 Trace TurboFan\(cqs loop optimisations.
 
+.V8 trace-turbo-nci
+Trace native context-independent code.
+
 .V8 trace-turbo-path | String NULL
 Directory to dump generated TurboFan IR to.
 
@@ -1510,6 +1550,9 @@ Don\(cqt consider control flow while allocating registers.
 .V8 no-turbo-escape
 Disable escape analysis.
 
+.V8 turbo-fast-api-calls
+Enable fast API calls from TurboFan.
+
 .V8 turbo-filter | String \(lq*\(rq
 Optimisation filter for TurboFan compiler.
 
@@ -1539,6 +1582,12 @@ Disable TurboFan loop variable optimisation.
 
 .V8 no-turbo-move-optimization
 Don\(cqt optimise gap moves in TurboFan.
+
+.V8 turbo-nci
+Enable experimental native context-independent code.
+
+.V8 turbo-nci-as-highest-tier
+Replace default TF with NCI code as the highest tier for testing purposes.
 
 .V8 turbo-profiling
 Enable profiling in TurboFan.
@@ -1631,17 +1680,14 @@ Disable bounds checks (disable for performance testing only).
 .V8 no-wasm-code-gc
 Disable garbage collection of WASM code.
 
-.V8 no-wasm-far-jump-table
-Don\(cqt use multiple separate code spaces that might require far jumps between them.
+.V8 wasm-expose-debug-eval
+Expose WASM evaluator support on the CDP.
 
 .V8 wasm-fuzzer-gen-test
 Generate a test case when running a WASM fuzzer.
 
 .V8 no-wasm-grow-shared-memory
 Forbid growing shared WebAssembly memory objects.
-
-.V8 wasm-interpret-all
-Execute all WASM code in the WASM interpreter.
 
 .V8 wasm-lazy-compilation
 Enable lazy compilation for all WASM modules.
@@ -1659,7 +1705,10 @@ Maximum committed code space for WASM (in MB).
 Maximum size of the initial WASM code space reservation (in MB).
 
 .V8 wasm-max-mem-pages | Uint 32767
-Maximum number of 64KiB memory pages of a WASM instance.
+Maximum initial number of 64KiB memory pages of a WASM instance.
+
+.V8 wasm-max-mem-pages-growth | Uint 65536
+Maximum number of 64KiB pages a WASM instance\(cqs memory can grow to.
 
 .V8 wasm-max-table-size | Uint 10000000
 Maximum table size of a WASM instance.
@@ -1669,6 +1718,9 @@ Maximum number of parallel compilation tasks for WASM.
 
 .V8 wasm-opt
 Enable WASM optimisation.
+
+.V8 wasm-simd-post-mvp
+Allow experimental SIMD operations for prototyping that aren't included in the current proposal.
 
 .V8 no-wasm-stack-checks
 Disable stack checks (disable for performance testing only).

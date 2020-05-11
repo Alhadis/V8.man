@@ -101,14 +101,15 @@ sub parseOpts {
 						$desc =~ s/^Enable/Disable/i  or
 						$desc =~ s/^Include/Exclude/i or
 						$desc =~ s/^(
-							Abort|Allocate|Automatically|Analy[zs]e|Cache|Compact|Elide|Expose|Filter|
-							Free|Generate|Get|Inline|Intrinsify|Optimi[sz]e|Pretenure|Promote|Randomi[zs]e|
-							Rehash|Run|Rewrite|Share|Skip|Split|Trace|Track|Trigger|Use|Validate|Write
-						)(?=\h)/Don't \l$1/xi
+							Abort|Add|Allocate|Automatically|Analy[zs]e|Cache|Compact|Elide|Expose|Filter|
+							Free|Generate|Get|Increase|Inline|Intrinsify|Optimi[sz]e|Pretenure|Promote|Randomi[zs]e|
+							Rehash|Run|Rewrite|Schedule|Share|Skip|Split|Trace|Track|Trigger|Use|Validate|Write
+						)(?=\h|\R\.``)/Don't \l$1/xi
 					){
 						my $replacements_line = __LINE__ + 1;
 						my %replacements = (
 							"adjust-os-scheduling-parameters" => "Don't adjust OS-specific scheduling parameters for the isolate.",
+							"always-promote-young-mc" => "Don't promote young objects indiscriminately during mark-compact.",
 							"concurrent-array-buffer-sweeping" => "Don't sweep array buffers concurrently",
 							"concurrent-recompilation" => "Force synchronous optimisation of hot functions.",
 							"idle-time-scavenge" => "Don't perform scavenges in idle time.",
@@ -162,12 +163,12 @@ sub parseOpts {
 		{
 			no warnings qw<uninitialized>;
 			my $punct = '([.,!?]\)|\)[.,!?]|[.,;:!?])?';
-			$desc =~ s/ wasm( |\.(?:$|\h))/ WASM$1/g;
+			$desc =~ s/ wasm( |\.(?:$|\h))/ WASM$1/gi;
 			$desc =~ s/\bmksnapshot\b/\\*(C!$&\\fP/g;
 			$desc =~ s/^Turbofan /TurboFan /gm;
 			$desc =~ s/^Print\Ks(?=\s)//gm;
 			$desc =~ s/^(Used with --perf-prof),\s*(load WASM source map and provide annotate support)/\u$2 when \l$1/i;
-			$desc =~ s/ source\K\h(?=map )/-/gi;
+			$desc =~ s/ source\K\h(?=map )|\bcontext\K (?=independent code)|\bcall\K (?=counts)/-/gi;
 			$desc =~ s/ top\K\h(?=level[.\h])| tier(?:ing)?\K\h(?=up[.\h])/-/gi;
 			$desc =~ s/^Print number of allocations and enable\Ks (analysis mode for) gc fuzz (?=testing)/ $1 GC fuzz-/i;
 			$desc =~ s/\ADisable \Kglobal\.\Z/\n.JS global .\n/;
@@ -204,7 +205,7 @@ sub parseOpts {
 				| ArrayBuffer
 				| RangeError
 				| JSON\.stringify
-				| Promise(?:\.allSettled)?
+				| Promise(?:\.(?:allSettled|any))?
 				| BigInt(?:\.[\$\w]+)*+
 				| WebAssembly\.compile
 				| (?i:sharedarraybuffer)
@@ -242,6 +243,15 @@ sub parseOpts {
 			$desc =~ s/^(?:Disable|Enable) \K"(\n\.JS[^\n]+)\n"([.,])/$1 $2/gm;
 			$desc =~ s/^(?:Disable|Enable) \K"(DateTimeFormat) (formatRange)"/\n.JS $1.$2 /m;
 			$desc =~ s/^(?:Disable|Enable) \K"(dateStyle) (timeStyle)( for DateTimeFormat)"/\\f(CW$1\\fP and \\f(CW$2\\fP$3/m;
+			$desc =~ s/space: \Klimit - size\.?/\n.EQ\n( "limit"\\~ - \\~ "size" ).\n.EN\n/i;
+			$desc =~ s/^Allow only natives(?= explicitly\b)/Only allow natives that\\(cqre/gi;
+			$desc =~ s/Perform\K the(?= script streaming)//i;
+			$desc =~ s/ cpu / CPU /i;
+			$desc =~ s/ wall\K (?=time\b)/-/i;
+			$desc =~ s/^Enable size optimisations for \Kthe (?=code)//i;
+			$desc =~ s/that are not included/that aren't included/i;
+			$desc =~ s/ a WASM(?= memory\s)/ a WASM instance's/i;
+			$desc =~ s/test \K(parsing) on (background)/$2 $1/i;
 			$desc =~ s/^Add \K(calendar) and (numberingSystem)(?= to DateTimeFormat\.)/\\f(CW$1\\fP and \\f(CW$2\\fP/m;
 			$desc =~ s/^(?!\.).*?\s\K(Intl\.NumberFormat|DateTimeFormat)([.,]|(?:\h+|$))/\n.JS $1 $2\n/gm;
 			$desc =~ s/^\.JS +\S+\K\h+(?=[^.,\s])//gm;
@@ -262,6 +272,9 @@ sub parseOpts {
 			}
 			elsif($key eq "vtune-prof-annotate-wasm"){
 				$desc = "Load WebAssembly source-map and provide annotate support. Used when\n.`` v8_enable_vtunejit\nis enabled.\nExperimental.";
+			}
+			elsif($key eq "fuzzing"){
+				$desc = "Cause intrinsics to fail silently by returning\n.`` undefined\nfor invalid usage.";
 			}
 		}
 		
