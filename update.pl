@@ -273,6 +273,26 @@ sub parseOpts {
 	return $output;
 }
 
+# Locate the most recent version of V8's shell
+sub findV8 {
+	no warnings qw< uninitialized >;
+	
+	# Respect manual overrides
+	if(defined $ENV{"V8_PATH"}){
+		(my $cmd = $ENV{"V8_PATH"}) =~ s/'/'\''/g;
+		return qq|'$cmd'|;
+	}
+	my %versions = ();
+	foreach("d8", "v8", "v8-debug"){
+		`command 2>&1 >/dev/null -v $_`;
+		next if $?;
+		(my $ver = `$_ -e 'print(version());'`) =~ s/\s+$//;
+		$versions{$ver} = $_ if $ver =~ m/^[0-9]+(?:\.[0-9]+)*+$/;
+	}
+	my @keys = sort { $b cmp $a } keys %versions;
+	return $versions{$keys[0]};
+}
+
 # No file-path supplied
 unless($ARGV[0]){
 	say "Usage: $0 /path/to/v8.1";
@@ -283,7 +303,8 @@ unless($ARGV[0]){
 my $pagePath = $ARGV[0];
 -f $pagePath or die "Can't read $pagePath: bailing";
 
-$_ = `d8 --help`;
+my $V8 = findV8;
+$_ = `$V8 --help`;
 s/\A(\w+=\d+\s*)+\n//;
 s/^\s*Synopsis:(.*?)\n(?=Options:)//si;
 s/\s*Options:(.+?)\s*\Z//si;
@@ -300,7 +321,7 @@ my $source = do {{
 (my $foot) = ($source =~ m/(\n\.\\" END SCRAPE\n.+\Z)/s);
 
 # Update revision date and version string
-(my $version) = (`echo exit | d8 --version` =~ /^V8 version v?([\d.]+)$/mi);
+(my $version) = (`echo exit | $V8 --version` =~ /^V8 version v?([\d.]+)$/mi);
 if($version){
 	my ($day, $month, $year) = (localtime())[3..5];
 	$month = POSIX::strftime("%B", 0, 0, 0, $day, $month, $year);
