@@ -201,6 +201,7 @@
 .el   .B d8\ \ \ \&
 .RI [ options ]
 .RB [ \-e\~ "\*(CIstring\fP]"
+.RB [ \-\-lcov =\*(CIpath\fP]
 .RB [ \-\-shell ]
 .RI [[ "\*(CB\-\-module\fP" ] " file..." ]
 .nr CW 0
@@ -214,6 +215,18 @@ Capture all remaining arguments in JavaScript.
 .TP 6
 .BI \-e " string"
 Execute \fIstring\fR in V8.
+.TP 6
+.BI \-\-lcov\*(CW=\fP path
+Write
+.BR lcov (1)
+compatible coverage info to \fIpath\fP.
+.IP
+Note: the
+.`` =
+separator is mandatory; something like \(lq\*(CB--lcov\*(CW\~\*(CIpath\fR\(rq will
+.ie t .I not
+.el   .B not
+work.
 .TP
 .BI \-\-shell
 Run an interactive JavaScript shell.
