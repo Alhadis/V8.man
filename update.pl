@@ -259,6 +259,7 @@ sub parseOpts {
 			$desc =~ s/(?<=\w)'(?=s )/\\(cq/g;
 			$desc =~ s/(\n\.(?:``|JS).+)\n+/$1\n/g;
 			$desc =~ s/\.\nU(?=se a fixed suppression string)/,\nand u/is;
+			$desc =~ s/\bstack\K scanning in(?= scavenge\b)/-scanning during/i;
 			$desc =~ s/^Freelist strategy to use\K:((?:\s+[0-9]:FreeList\w+\.?\h*)*)/.\nSupported values and their meanings are:\n.sp 1\n.nf\n$1\n.fi\n/m;
 			$desc =~ s/(?:^|\s+)([0-9]):(FreeList[A-Z]\w+)[.\h]*/\n\\fR$1\\fP\t\\*(C!$2\\fR/gm;
 			$desc =~ s/^([12])=([^\s.,]+)[.,]?$/\\*(C?$1\\fP selects \\*(C!$2\\fP,/igm;

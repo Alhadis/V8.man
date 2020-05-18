@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "May 11, 2020" "V8 8.4.327" V8
+.TH V8 1 "May 18, 2020" "V8 8.5.6" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -712,7 +712,7 @@ Disable all shipped Harmony features.
 Enable
 .JS String.prototype.replaceAll .
 
-.V8 harmony-top-level-await (WIP)
+.V8 harmony-top-level-await
 Enable top-level
 .`` await .
 
@@ -1095,6 +1095,9 @@ Report runtime call-counts and times.
 
 .V8 sampling-heap-profiler-suppress-randomness
 Use constant sample intervals to eliminate test flakiness.
+
+.V8 scavenge-separate-stack-scanning
+Use a separate phase for stack-scanning during scavenge.
 
 .V8 no-scavenge-task
 Don\(cqt schedule scavenge tasks.
