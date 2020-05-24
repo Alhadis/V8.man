@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "May 18, 2020" "V8 8.5.6" V8
+.TH V8 1 "May 24, 2020" "V8 8.5.34" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -529,6 +529,9 @@ Enable prototype thread opcodes for WASM.
 .V8 experimental-wasm-type-reflection
 Enable prototype WASM type reflection in JS for WASM.
 
+.V8 experimental-wasm-typed-funcref
+Enable prototype typed function references for WASM.
+
 .V8 expose-async-hooks
 Expose
 .`` async_hooks
@@ -691,8 +694,8 @@ date types.
 Enable
 .JS Intl.Segmenter .
 
-.V8 harmony-logical-assignment
-Enable logical assignment.
+.V8 no-harmony-logical-assignment
+Disable logical assignment.
 
 .V8 no-harmony-namespace-exports
 Disable namespace exports (\f(CWexport * as foo from "bar"\fP).
@@ -721,8 +724,8 @@ Disable
 .V8 no-harmony-shipping
 Disable all shipped Harmony features.
 
-.V8 harmony-string-replaceall
-Enable
+.V8 no-harmony-string-replaceall
+Disable
 .JS String.prototype.replaceAll .
 
 .V8 harmony-top-level-await
@@ -934,6 +937,9 @@ Perform young generation mark compact GCs.
 
 .V8 no-minor-mc-parallel-marking
 Don\(cqt use parallel marking for the young generation.
+
+.V8 minor-mc-trace-fragmentation
+Trace fragmentation after marking.
 
 .V8 mock-arraybuffer-allocator
 Use a mock
