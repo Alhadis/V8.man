@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "May 24, 2020" "V8 8.5.34" V8
+.TH V8 1 "June 3, 2020" "V8 8.5.98" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -707,8 +707,8 @@ Disable private methods in class literals.
 Disable
 .JS Promise.allSettled .
 
-.V8 harmony-promise-any
-Enable
+.V8 no-harmony-promise-any
+Disable
 .JS Promise.any .
 
 .V8 harmony-regexp-match-indices (WIP)
@@ -1257,7 +1257,7 @@ String-flag.
 Disable ThinString support.
 
 .V8 trace
-Trace function calls.
+Trace JavaScript function calls.
 
 .V8 trace-all-uses
 Trace all use positions.
@@ -1521,6 +1521,9 @@ Trace the unmapping.
 .V8 trace-verify-csa
 Trace code stubs verification.
 
+.V8 trace-wasm
+Trace WASM function calls.
+
 .V8 trace-wasm-ast-end | Int 0
 End function for WASM AST trace (exclusive).
 
@@ -1612,7 +1615,10 @@ Enable experimental native context-independent code.
 Replace default TF with NCI code as the highest tier for testing purposes.
 
 .V8 turbo-profiling
-Enable profiling in TurboFan.
+Enable basic block-profiling in TurboFan.
+
+.V8 turbo-profiling-verbose
+Enable basic block-profiling in TurboFan, and include each function\(cqs schedule and disassembly in the output.
 
 .V8 no-turbo-rewrite-far-jumps
 Don\(cqt rewrite far to near jumps (ia32,x64).
@@ -1673,9 +1679,6 @@ Don\(cqt use on-stack replacement.
 
 .V8 use-strict
 Enforce strict mode.
-
-.V8 no-use-verbose-printer
-Disable verbose printing.
 
 .V8 v8-os-page-size | Int 0
 Override OS page size (in KBytes).

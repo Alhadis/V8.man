@@ -217,6 +217,8 @@ sub parseOpts {
 			$desc =~ s/"(Intl\.\w+)"(\.?)/\n.JS $1 $2\n/g;
 			$desc =~ s/"(Intl\.\w+)\h+([^"]+)"(\.?)/\n.JS $1\n$2$3/g;
 			$desc =~ s/sharedarraybuffer/SharedArrayBuffer/g;
+			$desc =~ s/ [Jj]avascript / JavaScript /g;
+			$desc =~ s/\bblock\K (?=profiling\b)/-/gi;
 			$desc =~ s/"(well-formed) (JSON\.stringify)"\./$1\n.JS $2 ./;
 			$desc =~ s/"(RegExp Unicode sequence properties)"/$1/;
 			$desc =~ s/\(0 means random\)\K\((with snapshots[^()]+)\)/.\n\u$1/;
