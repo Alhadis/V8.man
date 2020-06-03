@@ -16,7 +16,7 @@ Just use [`curl(1)`][] or [`wget(1)`][] `v8.1` into any directory in your `MANPA
 ~~~
 
 Or clone this repository locally, symlink or prepend it to your `MANPATH`,
-print out the [spiffy PDF version](v8.1.pdf), photocopy it a thousand times
+print out a [spiffy PDF version][v8.1.pdf], photocopy it a thousand times
 and mummify your co-worker... the usual.
 
 > **NOTE:** [`d8.1`](./d8.1) is just an alias for [`v8.1`](./v8.1), so that
@@ -40,5 +40,6 @@ seriously. Or notice/care about, for that matter.
 
 [D8]: https://v8.dev/docs/d8
 [dotfiles]: https://github.com/Alhadis/.files
+[v8.1.pdf]: https://github.com/Alhadis/V8.man/blob/d5bbafe322/v8.1.pdf
 [`curl(1)`]: https://linux.die.net/man/1/curl
 [`wget(1)`]: https://linux.die.net/man/1/wget
