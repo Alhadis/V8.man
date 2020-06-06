@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "June 3, 2020" "V8 8.5.98" V8
+.TH V8 1 "June 7, 2020" "V8 8.5.131" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -1177,6 +1177,9 @@ Stress the GC compactor to flush out bugs (implies \*(C!--force-marking-deque-ov
 Stress GC compaction by selecting random percent of pages as evacuation candidates.
 It overrides \*(C!--stress-compaction\fP.
 
+.V8 stress-concurrent-allocation
+Start background threads that allocate memory.
+
 .V8 stress-flush-bytecode
 Stress bytecode flushing.
 
@@ -1776,6 +1779,9 @@ Don\(cqt write protect code memory.
 
 .V8 no-young-generation-large-objects
 Don\(cqt allocate large objects by default in the young generation large object space.
+
+.V8 zone-stats-tolerance | size_t 1048576
+Report a tick only when allocated zone memory changes by this amount.
 .\" END SCRAPE
 
 .SH SEE ALSO
