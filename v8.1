@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "June 7, 2020" "V8 8.5.131" V8
+.TH V8 1 "July 23, 2020" "V8 8.6.227" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -257,10 +257,7 @@ Don\(cqt adjust OS-specific scheduling parameters for the isolate.
 Don\(cqt pretenure with allocation sites.
 
 .V8 allow-natives-for-differential-fuzzing
-Only allow natives that\(cqre explicitly whitelisted for differential fuzzers.
-
-.V8 allow-natives-for-fuzzing
-Only allow natives that\(cqre explicitly whitelisted for fuzzers.
+Only allow natives that\(cqre explicitly allowlisted for differential fuzzers.
 
 .V8 allow-natives-syntax
 Allow natives syntax.
@@ -491,14 +488,17 @@ Number of fixpoint iterations it takes to switch to linear ephemeron algorithm.
 .V8 es-staging (INTERNAL)
 Enable test-worthy Harmony features.
 
+.V8 experimental-flush-embedded-blob-icache
+Used in an experiment to evaluate icache flushing on certain CPUs.
+
 .V8 experimental-stack-trace-frames
 Enable experimental frames (API/Builtins) and stack trace layout.
 
-.V8 experimental-wasm-anyref
-Enable prototype anyref opcodes for WASM.
+.V8 experimental-wasm-allow-huge-modules
+Allow WASM modules bigger than 1GB, but below ~2GB.
 
-.V8 experimental-wasm-bigint
-Enable prototype JS
+.V8 no-experimental-wasm-bigint
+Disable prototype JS
 .JS BigInt
 support for WASM.
 
@@ -514,8 +514,11 @@ Enable prototype exception handling opcodes for WASM.
 .V8 experimental-wasm-gc
 Enable prototype garbage collection for WASM.
 
-.V8 experimental-wasm-mv
-Enable prototype multi-value support for WASM.
+.V8 no-experimental-wasm-mv
+Disable prototype multi-value support for WASM.
+
+.V8 experimental-wasm-reftypes
+Enable prototype reference type opcodes for WASM.
 
 .V8 experimental-wasm-return-call
 Enable prototype return call opcodes for WASM.
@@ -616,22 +619,12 @@ Use new background GC schedule heuristics.
 .V8 gc-experiment-less-compaction
 Use less compaction in non-memory reducing mode.
 
+.V8 gc-experiment-reduce-concurrent-marking-tasks
+Reduce the number of concurrent marking tasks.
+
 .V8 gc-fake-mmap | String \(lq/tmp/__v8_gc__\(rq
 Specify the name of the file for fake gc mmap used in
 .`` ll_prof .
-
-.V8 gc-freelist-strategy | Int 5
-Freelist strategy to use.
-Supported values and their meanings are:
-.sp 1
-.nf
-\fR0\fP	\*(C!FreeListLegacy\fR
-\fR1\fP	\*(C!FreeListFastAlloc\fR
-\fR2\fP	\*(C!FreeListMany\fR
-\fR3\fP	\*(C!FreeListManyCached\fR
-\fR4\fP	\*(C!FreeListManyCachedFastPath\fR
-\fR5\fP	\*(C!FreeListManyCachedOrigin\fR
-.fi
 
 .V8 gc-global
 Always perform global GCs.
@@ -665,6 +658,10 @@ Don\(cqt abort by crashing.
 .V8 harmony
 Enable all completed Harmony features.
 
+.V8 harmony-atomics-waitasync (WIP)
+Enable
+.JS Atomics.waitAsync .
+
 .V8 no-harmony-dynamic-import
 Disable dynamic import.
 
@@ -676,12 +673,6 @@ property.
 .V8 harmony-intl-dateformat-day-period
 Add
 .`` dayPeriod
-option to
-.JS DateTimeFormat .
-
-.V8 no-harmony-intl-dateformat-fractional-second-digits
-Don\(cqt add
-.`` fractionalSecondDigits
 option to
 .JS DateTimeFormat .
 
@@ -823,6 +814,9 @@ Don\(cqt use lazy compilation.
 
 .V8 no-lazy-feedback-allocation
 Don\(cqt allocate feedback vectors lazily.
+
+.V8 lazy-new-space-shrinking
+Enable the new lazy space-shrinking strategy.
 
 .V8 no-liftoff
 Disable Liftoff, the baseline compiler for WebAssembly.
@@ -1069,6 +1063,9 @@ Report runtime call-counts and times.
 .V8 rcs-cpu-time
 Report runtime times in CPU time (the default is wall-time).
 
+.V8 no-reclaim-unmodified-wrappers
+Don\(cqt reclaim unmodified wrapper objects that are otherwise unreachable.
+
 .V8 redirect-code-traces
 Output deopt information and disassembly into file
 .RI \(lqcode- pid - isolate-id .asm.\(rq
@@ -1136,11 +1133,15 @@ Custom size for serialization chunks.
 .V8 serialization-statistics
 Collect statistics on serialized objects.
 
+.V8 sim-arm64-optional-features | String \(lqnone\(rq
+Enable optional simulator features for testing.
+Supported values are \(lqnone\(rq and \(lqall\(rq.
+
 .V8 sim-stack-alignment | Int 8
 Stack alignment in bytes in simulator (4 or 8, 8 is default).
 
 .V8 sim-stack-size | Int 2048
-Stack size of the ARM64, MIPS64 and PPC64 simulator in kBytes (default is 2 MB).
+Stack size of the ARM64, MIPS, MIPS64 and PPC64 simulator in kBytes (default is 2 MB).
 
 .V8 single-threaded
 Disable the use of background tasks.
@@ -1512,6 +1513,9 @@ Trace TurboFan IR with schedule.
 .V8 trace-turbo-scheduler
 Trace TurboFan\(cqs scheduler.
 
+.V8 trace-turbo-stack-accesses
+Trace stack load/store counters for optimised code in run-time (x64 only).
+
 .V8 trace-turbo-trimming
 Trace TurboFan\(cqs graph trimmer.
 
@@ -1542,6 +1546,9 @@ Print all memory updates performed in WASM code.
 .V8 trace-zone-stats
 Trace zone memory usage.
 
+.V8 trace-zone-type-stats
+Trace per-type zone memory usage.
+
 .V8 no-track-computed-fields
 Don\(cqt track computed boilerplate fields.
 
@@ -1571,6 +1578,9 @@ Disable TurboFan allocation folding.
 
 .V8 no-turbo-cf-optimization
 Don\(cqt optimise control flow in TurboFan.
+
+.V8 no-turbo-collect-feedback-in-generic-lowering
+Disable experimental feedback collection in generic lowering.
 
 .V8 no-turbo-control-flow-aware-allocation
 Don\(cqt consider control flow while allocating registers.
@@ -1620,6 +1630,15 @@ Replace default TF with NCI code as the highest tier for testing purposes.
 .V8 turbo-profiling
 Enable basic block-profiling in TurboFan.
 
+.V8 turbo-profiling-log-builtins
+ Write data about basic block usage in built-ins to
+.`` v8.log .
+Requires that V8 be built with
+.`` v8_enable_builtins_profiling=true .
+
+.V8 turbo-profiling-log-file | String NULL
+Path of the input file containing basic block counters for built-ins (\*(C!mksnapshot\fP only).
+
 .V8 turbo-profiling-verbose
 Enable basic block-profiling in TurboFan, and include each function\(cqs schedule and disassembly in the output.
 
@@ -1658,6 +1677,9 @@ Verify TurboFan machine graph before instruction selection.
 
 .V8 turboprop
 Enable experimental turboprop mid-tier compiler.
+
+.V8 turboprop-mid-tier-reg-alloc
+Enable experimental mid-tier register allocator.
 
 .V8 no-unbox-double-arrays
 Don\(cqt automatically unbox arrays of doubles.
@@ -1699,14 +1721,17 @@ Experimental.
 Disable actual asynchronous compilation for
 .JS WebAssembly.compile .
 
-.V8 wasm-atomics-on-non-shared-memory
-Allow atomic operations on non-shared WebAssembly memory.
+.V8 no-wasm-atomics-on-non-shared-memory
+Forbid atomic operations on non-shared WebAssembly memory.
 
 .V8 no-wasm-bounds-checks
 Disable bounds checks (disable for performance testing only).
 
 .V8 no-wasm-code-gc
 Disable garbage collection of WASM code.
+
+.V8 wasm-dynamic-tiering
+Enable dynamic tier-up to the optimising compiler.
 
 .V8 wasm-expose-debug-eval
 Expose WASM evaluator support on the CDP.

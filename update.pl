@@ -120,6 +120,7 @@ sub parseOpts {
 							"parallel-scavenge" => "Disable parallel scavenging.",
 							"polymorphic-inlining" => "Disable polymorphic inlining.",
 							"prof-browser-mode" => "Turn off browser-compatible mode when profiling with --prof.",
+							"reclaim-unmodified-wrappers" => "Don't reclaim unmodified wrapper objects that are otherwise unreachable.",
 							"trace-maps-details" => "Don't log map details.",
 							"turbo-allocation-folding" => "Disable TurboFan allocation folding.",
 							"turbo-control-flow-aware-allocation" => "Don't consider control flow while allocating registers.",
@@ -127,6 +128,7 @@ sub parseOpts {
 							"turbo-loop-rotation" => "Disable TurboFan loop rotation.",
 							"turbo-loop-variable" => "Disable TurboFan loop variable optimisation.",
 							"use-verbose-printer" => "Disable verbose printing",
+							"wasm-atomics-on-non-shared-memory" => "Forbid atomic operations on non-shared WebAssembly memory.",
 							"wasm-grow-shared-memory" => "Forbid growing shared WebAssembly memory objects.",
 						);
 						if(defined($replacements{$key})){
@@ -203,6 +205,7 @@ sub parseOpts {
 			$desc =~ s/\b
 				( Error\.stack
 				| ArrayBuffer
+				| Atomics\.waitAsync
 				| RangeError
 				| JSON\.stringify
 				| Promise(?:\.(?:allSettled|any))?
@@ -227,6 +230,8 @@ sub parseOpts {
 			$desc =~ s/ <([Nn])> times\b/\n.VAR \u$1\ntimes/gi;
 			$desc =~ s/$matchKeys(?![-_\w])/"\\*(C!".($& =~ y|_|-|r)."\\fP"/eg;
 			$desc =~ s/($matchURL)$punct/\n.LK "$1" $2\n/g;
+			$desc =~ s/(?<=\h)lazy new space shrinking\b/new lazy space-shrinking/;
+			$desc =~ s/(?<=\h)optional features on the simulator for testing: (\S+) or ([^\s.]+)\.?\h*$/optional simulator features for testing.\nSupported values are \\(lq$1\\(rq and \\(lq$2\\(rq./gi;
 			$desc =~ s/(?<=\h)(gc[-_]interval|stress[-_]compaction)(?!-)\b/"\\*(C!--".($& =~ tr#_#-#r)."\\fP"/eg;
 			$desc =~ s/code-<pid>-<isolate id>(\.asm\.?)/\n.RI \\(lqcode- pid - isolate-id $1\\(rq/g;
 			$desc =~ s/(?<=\h)(random)\(0,\h*([xX])\)\h*/\\*(CB$1\\fP\\*(CW(0,\\fP\n.VAR $2 )\n/g;
@@ -264,6 +269,10 @@ sub parseOpts {
 			$desc =~ s/\bstack\K scanning in(?= scavenge\b)/-scanning during/i;
 			$desc =~ s/^Freelist strategy to use\K:((?:\s+[0-9]:FreeList\w+\.?\h*)*)/.\nSupported values and their meanings are:\n.sp 1\n.nf\n$1\n.fi\n/m;
 			$desc =~ s/(?:^|\s+)([0-9]):(FreeList[A-Z]\w+)[.\h]*/\n\\fR$1\\fP\t\\*(C!$2\\fR/gm;
+			$desc =~ s/^(?-x:Emit (data about basic block usage in built)ins to (v8\.log\b)) \s*
+				\((?-x:(requires that V8) was built with (v8_enable_builtins_profiling=true))\)\.$
+				/ Write\ $1-ins\ to\n\.``\ $2 .\n\u$3\ be\ built\ with\n.``\ $4 ./mix;
+			$desc =~ s/containing basic block counters for built\Kins\.\s*/-ins /gi;
 			$desc =~ s/^([12])=([^\s.,]+)[.,]?$/\\*(C?$1\\fP selects \\*(C!$2\\fP,/igm;
 			$desc =~ s/^Anything else=([^\s.,]+)[.,]?$/and any other value selects \\*(C!$1\\fP.\n/igm;
 			$desc =~ s/\n+$//;
