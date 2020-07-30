@@ -100,6 +100,7 @@ sub parseOpts {
 					unless(
 						$desc =~ s/^Enable/Disable/i  or
 						$desc =~ s/^Include/Exclude/i or
+						$desc =~ s/^Verify/Don't \l$&/i or
 						$desc =~ s/^(
 							Abort|Add|Allocate|Automatically|Analy[zs]e|Cache|Compact|Elide|Expose|Filter|
 							Free|Generate|Get|Increase|Inline|Intrinsify|Optimi[sz]e|Pretenure|Promote|Randomi[zs]e|
@@ -169,6 +170,11 @@ sub parseOpts {
 			$desc =~ s/\bmksnapshot\b/\\*(C!$&\\fP/g;
 			$desc =~ s/^Turbofan /TurboFan /gm;
 			$desc =~ s/^Print\Ks(?=\s)//gm;
+			$desc =~ s/seriali\Kz(?=ation)/s/gi;
+			$desc =~ s/ js-to-wasm / JS-to-WASM /g;
+			$desc =~ s/^Check that there are not\b/Check there aren't/;
+			$desc =~ s/\bheap_stats\b([.)]*)/\n.`` heap_stats $1\n/g;
+			$desc =~ s/(?:code statistics after|handles at) \KGC\b| after \KGC\b/garbage collection/gi;
 			$desc =~ s/^(Used with --perf-prof),\s*(load WASM source map and provide annotate support)/\u$2 when \l$1/i;
 			$desc =~ s/ source\K\h(?=map )|\bcontext\K (?=independent code)|\bcall\K (?=counts)/-/gi;
 			$desc =~ s/ top\K\h(?=level[.\h])| tier(?:ing)?\K\h(?=up[.\h])/-/gi;
