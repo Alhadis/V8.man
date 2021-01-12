@@ -98,9 +98,10 @@ sub parseOpts {
 					
 					# Try to negate sentence, but don't try TOO hard
 					unless(
+						$desc =~ s/^Allow/Disallow/i  or
 						$desc =~ s/^Enable/Disable/i  or
 						$desc =~ s/^Include/Exclude/i or
-						$desc =~ s/^Verify/Don't \l$&/i or
+						$desc =~ s/^(Delay|Verify)/Don't \l$&/i or
 						$desc =~ s/^(
 							Abort|Add|Allocate|Automatically|Analy[zs]e|Cache|Compact|Elide|Expose|Filter|
 							Free|Generate|Get|Increase|Inline|Intrinsify|Optimi[sz]e|Pretenure|Promote|Randomi[zs]e|
@@ -109,7 +110,12 @@ sub parseOpts {
 					){
 						my $replacements_line = __LINE__ + 1;
 						my %replacements = (
+							"abort-on-contradictory-flags" => "Allow flags and implications to override each other.",
 							"adjust-os-scheduling-parameters" => "Don't adjust OS-specific scheduling parameters for the isolate.",
+							"allocation-buffer-parking" => "Disable buffer parking.",
+							"text-is-readable" => "Don't try to read embedded `.text` sections in binary.",
+							"concurrent-allocation" => "Don't concurrently allocate in old space.",
+							"builtin-subclassing" => "Disable subclassing support in built-in methods.",
 							"always-promote-young-mc" => "Don't promote young objects indiscriminately during mark-compact.",
 							"concurrent-array-buffer-sweeping" => "Don't sweep array buffers concurrently",
 							"concurrent-recompilation" => "Force synchronous optimisation of hot functions.",
@@ -176,6 +182,8 @@ sub parseOpts {
 			$desc =~ s/\bheap_stats\b([.)]*)/\n.`` heap_stats $1\n/g;
 			$desc =~ s/(?:code statistics after|handles at) \KGC\b| after \KGC\b/garbage collection/gi;
 			$desc =~ s/^(Used with --perf-prof),\s*(load WASM source map and provide annotate support)/\u$2 when \l$1/i;
+			$desc =~ s/^Run regexps with /Execute regular expressions using /i;
+			$desc =~ s/^Temporary(?= disable)/Temporarily/gi;
 			$desc =~ s/ source\K\h(?=map )|\bcontext\K (?=independent code)|\bcall\K (?=counts)/-/gi;
 			$desc =~ s/ top\K\h(?=level[.\h])| tier(?:ing)?\K\h(?=up[.\h])/-/gi;
 			$desc =~ s/^Print number of allocations and enable\Ks (analysis mode for) gc fuzz (?=testing)/ $1 GC fuzz-/i;
@@ -229,6 +237,16 @@ sub parseOpts {
 			$desc =~ s/ [Jj]avascript / JavaScript /g;
 			$desc =~ s/\bblock\K (?=profiling\b)/-/gi;
 			$desc =~ s/"(well-formed) (JSON\.stringify)"\./$1\n.JS $2 ./;
+			$desc =~ s/\.? \((for testing)\.?\)\.?/.\nUsed $1./i;
+			$desc =~ s/^Specify the \K(name) (of the log file)[.,]?/\n.VAR $1\n$2.\n/i;
+			$desc =~ s/\h*use '-' for console,?/Use \\*(CB\\-\\fP for console, and/;
+			$desc =~ s/(?:and|,)\K\h*'\+'(?= for a temporary file)/\\*(CB+\\fP/;
+			$desc =~ s/ (?:and +)?'\+'(?= for a temporary file\b)/and \\*(CB+\\fP/i;
+			$desc =~ s/^Print WebAssembly code for function at \Kindex\b/\n.VAR $& /i;
+			$desc =~ s/^Number of backtracks.*?before fall\K( back to experimental engine) (if )/ing$1.\nOnly used $2/;
+			$desc =~ s/enable_experimental_regexp_engine_on_excessive_backtracks/--$&/;
+			$desc =~ s/^Use an \KIC /inline cache /g;
+			$desc =~ s/^Extra verbose/Use \l$&/;
 			$desc =~ s/"(RegExp Unicode sequence properties)"/$1/;
 			$desc =~ s/\(0 means random\)\K\((with snapshots[^()]+)\)/.\n\u$1/;
 			$desc =~ s/ <([a-z])> /\n.VAR \u$1\n/gi;
@@ -271,6 +289,8 @@ sub parseOpts {
 			$desc =~ s/^\.JS.+?\K(?:\h{2,}(?=[.,]\h*$)|(?<=\w)(?=${punct}$))/ /gm;
 			$desc =~ s/(?<=\w)'(?=s )/\\(cq/g;
 			$desc =~ s/(\n\.(?:``|JS).+)\n+/$1\n/g;
+			$desc =~ s/ (externref|memory64)([.,]|(?=\s|$) *)/\n.`` $1 $2\n/g;
+			$desc =~ s/^Disable\K atomics(\.?)/\n.JS Atomics $1\n/i;
 			$desc =~ s/\.\nU(?=se a fixed suppression string)/,\nand u/is;
 			$desc =~ s/\bstack\K scanning in(?= scavenge\b)/-scanning during/i;
 			$desc =~ s/^Freelist strategy to use\K:((?:\s+[0-9]:FreeList\w+\.?\h*)*)/.\nSupported values and their meanings are:\n.sp 1\n.nf\n$1\n.fi\n/m;
@@ -293,6 +313,12 @@ sub parseOpts {
 			}
 			elsif($key eq "fuzzing"){
 				$desc = "Cause intrinsics to fail silently by returning\n.`` undefined\nfor invalid usage.";
+			}
+			elsif($key eq "enable-experimental-regexp-engine"){
+				$desc = 'Enable experimental regular expression engine for regexes which use the \*(C!/l\fP (\(lqlinear\(rq) flag.';
+			}
+			elsif($key eq "allow-overwriting-for-next-flag"){
+				$desc = "Temporarily disable flag contradiction so the next flag gets overwritten.";
 			}
 		}
 		

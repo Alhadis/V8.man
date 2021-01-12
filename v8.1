@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "July 31, 2020" "V8 8.6.282" V8
+.TH V8 1 "January 13, 2021" "V8 8.9.255" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -247,11 +247,17 @@ Option names beginning with
 pertain to a boolean V8 flag enabled by default.
 
 .\" BEGIN SCRAPE
+.V8 no-abort-on-contradictory-flags
+Allow flags and implications to override each other.
+
 .V8 abort-on-uncaught-exception
 Abort program (dump core) when an uncaught exception is thrown.
 
 .V8 no-adjust-os-scheduling-parameters
 Don\(cqt adjust OS-specific scheduling parameters for the isolate.
+
+.V8 no-allocation-buffer-parking
+Disable buffer parking.
 
 .V8 no-allocation-site-pretenuring
 Don\(cqt pretenure with allocation sites.
@@ -261,6 +267,9 @@ Only allow natives that\(cqre explicitly allowlisted for differential fuzzers.
 
 .V8 allow-natives-syntax
 Allow natives syntax.
+
+.V8 allow-overwriting-for-next-flag
+Temporarily disable flag contradiction so the next flag gets overwritten.
 
 .V8 allow-unsafe-function-constructor
 Allow invoking the function constructor without security checks.
@@ -274,9 +283,6 @@ Always try to optimise functions.
 .V8 always-osr
 Always try to OSR functions.
 
-.V8 no-always-promote-young-mc
-Don\(cqt promote young objects indiscriminately during mark-compact.
-
 .V8 no-analyze-environment-liveness
 Don\(cqt analyse liveness of environment slots and zap dead values.
 
@@ -289,9 +295,6 @@ Enable lazy compilation for asm-wasm modules.
 .V8 assert-types
 Generate runtime type assertions to test the typer.
 
-.V8 assume-asmjs-origin
-Force WASM decoder to assume input is internal asm-wasm format.
-
 .V8 no-async-stack-traces
 Exclude async stack traces in
 .JS Error.stack .
@@ -301,6 +304,9 @@ Block queued jobs until released.
 
 .V8 budget-for-feedback-vector-allocation | Int 1024
 The budget in amount of bytecode executed by a function before we decide to allocate feedback vectors.
+
+.V8 no-builtin-subclassing
+Disable subclassing support in built-in methods.
 
 .V8 builtins-in-stack-traces
 Show built-in functions in stack traces.
@@ -341,8 +347,8 @@ Disable compilation cache.
 .V8 compiler-dispatcher
 Enable compiler dispatcher.
 
-.V8 concurrent-allocation
-Concurrently allocate in old space.
+.V8 no-concurrent-allocation
+Don\(cqt concurrently allocate in old space.
 
 .V8 no-concurrent-array-buffer-freeing
 Don\(cqt free array buffer allocations on a background thread.
@@ -391,6 +397,9 @@ Don\(cqt generate extra code (assertions) for debugging.
 .V8 debug-sim
 Enable debugging the simulator.
 
+.V8 default-to-experimental-regexp-engine
+Execute regular expressions using the experimental engine where possible.
+
 .V8 deopt-every-n-times | Int 0
 Deoptimise every n times a deopt point is passed.
 
@@ -426,9 +435,6 @@ Dump WASM module bytes.
 .V8 dump-wasm-module-path | String NULL
 Directory to dump WASM modules to.
 
-.V8 dynamic-map-checks
-Use dynamic map checks when generating code for property accesses if all handlers in an IC are the same.
-
 .V8 embedded-src | String NULL
 Path for the generated embedded data file.
 (\*(C!mksnapshot\fP only).
@@ -449,11 +455,20 @@ Deprecated (use \*(C!--arm-arch\fP instead).
 .V8 no-enable-avx
 Disable use of AVX instructions if available.
 
+.V8 no-enable-avx2
+Disable use of AVX2 instructions if available.
+
 .V8 no-enable-bmi1
 Disable use of BMI1 instructions if available.
 
 .V8 no-enable-bmi2
 Disable use of BMI2 instructions if available.
+
+.V8 enable-experimental-regexp-engine
+Enable experimental regular expression engine for regexes which use the \*(C!/l\fP (\(lqlinear\(rq) flag.
+
+.V8 enable-experimental-regexp-engine-on-excessive-backtracks
+Fall back to a breadth-first regexp engine on excessive backtracking.
 
 .V8 no-enable-fma3
 Disable use of FMA3 instructions if available.
@@ -512,16 +527,16 @@ Enable test-worthy Harmony features.
 .V8 experimental-flush-embedded-blob-icache
 Used in an experiment to evaluate icache flushing on certain CPUs.
 
+.V8 experimental-liftoff-extern-ref
+Enable support for
+.`` externref
+in Liftoff.
+
 .V8 experimental-stack-trace-frames
 Enable experimental frames (API/Builtins) and stack trace layout.
 
 .V8 experimental-wasm-allow-huge-modules
 Allow WASM modules bigger than 1GB, but below ~2GB.
-
-.V8 no-experimental-wasm-bigint
-Disable prototype JS
-.JS BigInt
-support for WASM.
 
 .V8 no-experimental-wasm-bulk-memory
 Disable prototype bulk memory opcodes for WASM.
@@ -534,6 +549,11 @@ Enable prototype exception handling opcodes for WASM.
 
 .V8 experimental-wasm-gc
 Enable prototype garbage collection for WASM.
+
+.V8 experimental-wasm-memory64
+Enable prototype
+.`` memory64
+for WASM.
 
 .V8 no-experimental-wasm-mv
 Disable prototype multi-value support for WASM.
@@ -617,9 +637,6 @@ Force overflows of marking deque by reducing its size to 64 words.
 .V8 force-slow-path
 Always take the slow path for builtins.
 
-.V8 frame-count | Int 1
-Number of stack frames inspected by the profiler.
-
 .V8 function-context-specialization
 Enable function context specialization in TurboFan.
 
@@ -685,17 +702,16 @@ Don\(cqt abort by crashing.
 .V8 harmony
 Enable all completed Harmony features.
 
-.V8 harmony-atomics-waitasync (WIP)
-Enable
+.V8 no-harmony-atomics
+Disable
+.JS Atomics .
+
+.V8 no-harmony-atomics-waitasync
+Disable
 .JS Atomics.waitAsync .
 
-.V8 no-harmony-dynamic-import
-Disable dynamic import.
-
-.V8 no-harmony-import-meta
-Disable
-.JS import.meta
-property.
+.V8 harmony-import-assertions (WIP)
+Enable import assertions.
 
 .V8 harmony-intl-dateformat-day-period
 Add
@@ -708,32 +724,17 @@ Enable
 .JS Intl.DisplayNames
 date types.
 
-.V8 harmony-intl-segmenter
-Enable
-.JS Intl.Segmenter .
-
 .V8 no-harmony-logical-assignment
 Disable logical assignment.
-
-.V8 no-harmony-namespace-exports
-Disable namespace exports (\f(CWexport * as foo from "bar"\fP).
-
-.V8 no-harmony-private-methods
-Disable private methods in class literals.
-
-.V8 no-harmony-promise-all-settled
-Disable
-.JS Promise.allSettled .
-
-.V8 no-harmony-promise-any
-Disable
-.JS Promise.any .
 
 .V8 harmony-regexp-match-indices (WIP)
 Enable regexp match indices.
 
 .V8 harmony-regexp-sequence (WIP)
 Enable RegExp Unicode sequence properties.
+
+.V8 no-harmony-relative-indexing-methods
+Disable relative indexing methods.
 
 .V8 no-harmony-sharedarraybuffer
 Disable
@@ -833,6 +834,9 @@ Show interpreted frames on the native stack (useful for external profilers).
 .V8 interrupt-budget | Int 147456
 Interrupt budget which should be used for the profiler counter.
 
+.V8 no-isolate-script-cache-ageing
+Disable ageing of the isolate script cache.
+
 .V8 jitless
 Disable runtime allocation of executable memory.
 
@@ -848,14 +852,18 @@ Enable the new lazy space-shrinking strategy.
 .V8 no-liftoff
 Disable Liftoff, the baseline compiler for WebAssembly.
 
+.V8 liftoff-only
+Disallow Turbofan compilation for WebAssembly.
+Used for testing.
+
 .V8 lite-mode
 Enable trade-off of performance for memory savings.
 
 .V8 ll-prof
 Enable low-level Linux profiler.
 
-.V8 local-heaps
-Allow heap access from background tasks.
+.V8 no-local-heaps
+Disallow heap access from background tasks.
 
 .V8 log
 Minimal logging (no API, code, GC, suspect, or handles samples).
@@ -868,6 +876,9 @@ Log API events to the log file.
 
 .V8 log-code
 Log code events to the log file without profiling.
+
+.V8 log-code-disassemble
+Log all disassembled code to the log file.
 
 .V8 no-log-colour
 Don\(cqt use coloured output when logging.
@@ -888,7 +899,10 @@ Log source code.
 Log suspect operations.
 
 .V8 logfile | String \(lqv8.log\(rq
-Specify the name of the log file.
+Specify the
+.VAR name
+of the log file.
+Use \*(CB\-\fP for console, and\*(CB+\fP for a temporary file.
 
 .V8 no-logfile-per-isolate
 Use a single log-file for each isolate.
@@ -971,9 +985,6 @@ allocator for testing.
 Memory limit for mock
 .JS ArrayBuffer
 allocator used to simulate OOM for testing.
-
-.V8 no-modify-field-representation-inplace
-Disable in-place field representation updates.
 
 .V8 no-move-object-start
 Disable moving of object starts.
@@ -1096,6 +1107,10 @@ Print scopes.
 .V8 print-wasm-code
 Print WebAssembly code.
 
+.V8 print-wasm-code-function-index | Int -1
+Print WebAssembly code for function at
+.VAR index .
+
 .V8 print-wasm-stub-code
 Print WebAssembly stub code.
 
@@ -1144,6 +1159,10 @@ Output deopt information and disassembly into file
 
 .V8 redirect-code-traces-to | String NULL
 Output deopt information and disassembly into the given file.
+
+.V8 regexp-backtracks-before-fallback | Uint 50000
+Number of backtracks during regexp execution before falling back to experimental engine.
+Only used if \*(C!--enable-experimental-regexp-engine-on-excessive-backtracks\fP is set.
 
 .V8 regexp-interpret-all
 Interpret all regexp code.
@@ -1201,9 +1220,6 @@ Disable parsing on background.
 
 .V8 semi-space-growth-factor | Int 2
 Factor by which to grow the new space.
-
-.V8 serialization-chunk-size | Uint 4096
-Custom size for serialisation chunks.
 
 .V8 serialization-statistics
 Collect statistics on serialized objects.
@@ -1296,11 +1312,17 @@ Force scavenge at random points between 0 and
 .VAR X
 (inclusive) percent of the new space capacity.
 
+.V8 stress-turbo-late-spilling
+Optimise placement of all spill instructions, not just loop-top phis.
+
 .V8 stress-validate-asm
 Try to validate everything as asm.js.
 
 .V8 stress-wasm-code-gc
 Stress-test garbage collection of WASM code.
+
+.V8 super-ic
+Use an inline cache for super property loads.
 
 .V8 suppress-asm-messages
 Don\(cqt emit asm.js related messages (for golden file testing).
@@ -1335,8 +1357,14 @@ Seed used for threading test randomness.
 .V8 testing-string-flag | String \(lqHello,\~world!\(rq
 String-flag.
 
+.V8 no-text-is-readable
+Don\(cqt try to read embedded `.text` sections in binary.
+
 .V8 no-thin-strings
 Disable ThinString support.
+
+.V8 ticks-scale-factor-for-top-tier | Int 10
+Scale factor for profiler ticks when tiering-up from midtier.
 
 .V8 trace
 Trace JavaScript function calls.
@@ -1368,6 +1396,9 @@ Trace backing store events.
 .V8 trace-block-coverage
 Trace collected block coverage information.
 
+.V8 trace-code-dependencies
+Trace code dependencies.
+
 .V8 trace-compiler-dispatcher
 Trace compiler dispatcher activity.
 
@@ -1384,7 +1415,10 @@ Trace contexts operations.
 Trace the creation of allocation sites.
 
 .V8 trace-deopt
-Trace optimise function deoptimisation.
+Trace deoptimisation.
+
+.V8 trace-deopt-verbose
+Use extra verbose deoptimisation tracing.
 
 .V8 trace-detached-contexts
 Trace native contexts that are expected to be garbage collected.
@@ -1403,6 +1437,9 @@ Report evacuation statistics.
 
 .V8 trace-evacuation-candidates
 Show statistics about the pages evacuation by the compaction.
+
+.V8 trace-experimental-regexp-engine
+Trace execution of experimental regexp engine.
 
 .V8 trace-file-names
 Include file names in trace-opt/trace-deopt output.
@@ -1504,13 +1541,13 @@ Print mutator utilisation, allocation speed, GC speed.
 Print when objects are turned into dictionaries.
 
 .V8 trace-opt
-Trace lazy optimisation.
+Trace optimised compilation.
 
 .V8 trace-opt-stats
-Trace lazy optimisation statistics.
+Trace optimised compilation statistics.
 
 .V8 trace-opt-verbose
-Extra verbose compilation tracing.
+Use extra verbose optimised compilation tracing.
 
 .V8 trace-osr
 Trace on-stack replacement.
@@ -1720,8 +1757,11 @@ Don\(cqt optimise control flow in TurboFan.
 .V8 no-turbo-collect-feedback-in-generic-lowering
 Disable experimental feedback collection in generic lowering.
 
-.V8 no-turbo-control-flow-aware-allocation
-Don\(cqt consider control flow while allocating registers.
+.V8 turbo-direct-heap-access
+Access kNeverSerialised objects directly from the heap.
+
+.V8 no-turbo-dynamic-map-checks
+Don\(cqt use dynamic map checks when generating code for property accesses if all handlers in an IC are the same for turboprop and NCI.
 
 .V8 no-turbo-escape
 Disable escape analysis.
@@ -1762,8 +1802,14 @@ Don\(cqt optimise gap moves in TurboFan.
 .V8 turbo-nci
 Enable experimental native context-independent code.
 
-.V8 turbo-nci-as-highest-tier
-Replace default TF with NCI code as the highest tier for testing purposes.
+.V8 turbo-nci-as-midtier
+Insert NCI as a midtier compiler for testing purposes.
+
+.V8 turbo-nci-cache-ageing
+Enable ageing of the NCI code cache.
+
+.V8 no-turbo-nci-delayed-codegen
+Don\(cqt delay NCI codegen to reduce useless compilation work.
 
 .V8 turbo-profiling
 Enable basic block-profiling in TurboFan.
@@ -1816,8 +1862,11 @@ Verify TurboFan machine graph before instruction selection.
 .V8 turboprop
 Enable experimental turboprop mid-tier compiler.
 
-.V8 turboprop-mid-tier-reg-alloc
-Enable experimental mid-tier register allocator.
+.V8 turboprop-as-midtier
+Enable experimental turboprop mid-tier compiler.
+
+.V8 no-turboprop-mid-tier-reg-alloc
+Disable mid-tier register allocator for turboprop.
 
 .V8 no-unbox-double-arrays
 Don\(cqt automatically unbox arrays of doubles.
@@ -1865,9 +1914,6 @@ Experimental.
 Disable actual asynchronous compilation for
 .JS WebAssembly.compile .
 
-.V8 no-wasm-atomics-on-non-shared-memory
-Forbid atomic operations on non-shared WebAssembly memory.
-
 .V8 no-wasm-bounds-checks
 Disable bounds checks (disable for performance testing only).
 
@@ -1877,17 +1923,14 @@ Disable garbage collection of WASM code.
 .V8 wasm-dynamic-tiering
 Enable dynamic tier-up to the optimising compiler.
 
-.V8 wasm-expose-debug-eval
-Expose WASM evaluator support on the CDP.
-
 .V8 wasm-fuzzer-gen-test
 Generate a test case when running a WASM fuzzer.
 
-.V8 wasm-generic-wrapper
-Use generic JS-to-WASM wrapper instead of per-signature wrappers.
+.V8 no-wasm-generic-wrapper
+Disallow use of the generic JS-to-WASM wrapper instead of per-signature wrappers.
 
 .V8 no-wasm-grow-shared-memory
-Forbid growing shared WebAssembly memory objects.
+Disallow growing shared WebAssembly memory objects.
 
 .V8 wasm-lazy-compilation
 Enable lazy compilation for all WASM modules.
@@ -1898,17 +1941,14 @@ Enable lazy validation for lazily-compiled WASM functions.
 .V8 no-wasm-math-intrinsics
 Don\(cqt intrinsify some Math imports into WASM.
 
-.V8 wasm-max-code-space | Uint 1024
+.V8 wasm-max-code-space | Uint 4095
 Maximum committed code space for WASM (in MB).
 
 .V8 wasm-max-initial-code-space-reservation | Int 0
 Maximum size of the initial WASM code space reservation (in MB).
 
-.V8 wasm-max-mem-pages | Uint 32767
-Maximum initial number of 64KiB memory pages of a WASM instance.
-
-.V8 wasm-max-mem-pages-growth | Uint 65536
-Maximum number of 64KiB pages a WASM instance\(cqs memory can grow to.
+.V8 wasm-max-mem-pages | Uint 65536
+Maximum number of 64KiB memory pages per WASM memory.
 
 .V8 wasm-max-table-size | Uint 10000000
 Maximum table size of a WASM instance.
@@ -1916,11 +1956,14 @@ Maximum table size of a WASM instance.
 .V8 wasm-num-compilation-tasks | Int 128
 Maximum number of parallel compilation tasks for WASM.
 
-.V8 wasm-opt
-Enable WASM optimisation.
+.V8 no-wasm-opt
+Disable WASM optimisation.
 
 .V8 wasm-simd-post-mvp
 Allow experimental SIMD operations for prototyping that aren't included in the current proposal.
+
+.V8 wasm-simd-ssse3-codegen
+Allow WASM SIMD SSSE3 codegen.
 
 .V8 no-wasm-stack-checks
 Disable stack checks (disable for performance testing only).
@@ -1961,7 +2004,7 @@ Copyright \(co 2014, the V8 project authors.
 All rights reserved.
 .
 .PP
-Manpage adaption and programming copyright \(co 2016-2020,
+Manpage adaption and programming copyright \(co 2016-2021,
 .MT gardnerjohng@gmail.com
 Alhadis
 .ME .
