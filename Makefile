@@ -1,8 +1,7 @@
 all: update pdf
 
 # Update option-list from `d8 --help` output
-update: v8.1
-v8.1:
+update:
 	./update.pl v8.1
 	git diff
 
