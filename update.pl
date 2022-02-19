@@ -5,6 +5,7 @@ use autodie;
 use v5.14;
 use utf8;
 use POSIX;
+use version;
 $| = 1;
 
 # Generate Roff from extracted V8 options
@@ -40,6 +41,7 @@ sub parseOpts {
 			( help
 			| testing-d8-test-runner
 			| testing-bool-flag
+			| concurrent-inlining
 			) $
 			/ix;
 		
@@ -89,12 +91,19 @@ sub parseOpts {
 			my $default = $attr{"default"};
 			my $hideType = 0;
 			
+			# A switch named `--foo` that defaults to `--foo`? Yeah, that's not vague at all
+			$default =~ s/^--$key=("|')((?>(?!\1).)*)\1/$2/;
+			$default =~ s/^--$key=([^"'\s]+)/$1/;
+			
 			# Boolean-type switch
 			if("bool" eq $type){
+				$default = "false" if $default eq "--no${key}";
+				$default = "true"  if $default eq "--${key}";
 				$hideType = 1;
 				if($default eq "true"){
 					$desc =~ s/^Shares(?=\h)/Share/i;
 					$desc =~ s/^Allocate\Ks(?=\h)//i;
+					$desc =~ s/^Also (?=\w)/\l/i;
 					
 					# Try to negate sentence, but don't try TOO hard
 					unless(
@@ -103,16 +112,22 @@ sub parseOpts {
 						$desc =~ s/^Include/Exclude/i or
 						$desc =~ s/^(Delay|Verify)/Don't \l$&/i or
 						$desc =~ s/^(
-							Abort|Add|Allocate|Automatically|Analy[zs]e|Cache|Compact|Elide|Expose|Filter|
-							Free|Generate|Get|Increase|Inline|Intrinsify|Optimi[sz]e|Pretenure|Promote|Randomi[zs]e|
-							Rehash|Run|Rewrite|Schedule|Share|Skip|Split|Trace|Track|Trigger|Use|Validate|Write
+							Abort|Add|Allocate|Automatically|Analy[zs]e|Cache|Compact|Elide|Expose|Fall[- ]?back|Filter|
+							Free|Generate|Get|Increase|Inline|Intrinsify|Log|Optimi[sz]e|Perform|Pretenure|Promote|Protect|Put|
+							Randomi[zs]e|Rehash|Run|Rewrite|Schedule|Share|Skip|Split|Trace|Track|Trigger|Use|Validate|Write
 						)(?=\h|\R\.``)/Don't \l$1/xi
 					){
 						my $replacements_line = __LINE__ + 1;
 						my %replacements = (
 							"abort-on-contradictory-flags" => "Allow flags and implications to override each other.",
+							"feedback-allocation-on-bytecode-size" => "Use a variable-size budget scaled according to bytecode size for lazy feedback vector allocation.",
+							"experimental-flush-embedded-blob-icache" => "Disable an experiment used when evaluating icache flushing on certain CPUs.",
+							"trace-gc-heap-layout-ignore-minor-gc" => "Print trace line before and after minor-gc.",
+							"write-code-using-rwx" => "Flip permissions to `rw` to write page instead of `rwx`.",
+							"use-full-record-write-builtin" => "Don't force use of the full version of the\n.`` RecordWrite\n built-in.",
 							"adjust-os-scheduling-parameters" => "Don't adjust OS-specific scheduling parameters for the isolate.",
 							"allocation-buffer-parking" => "Disable buffer parking.",
+							"baseline-batch-compilation" => "Don't batch compile Sparkplug code.",
 							"text-is-readable" => "Don't try to read embedded `.text` sections in binary.",
 							"concurrent-allocation" => "Don't concurrently allocate in old space.",
 							"builtin-subclassing" => "Disable subclassing support in built-in methods.",
@@ -172,6 +187,7 @@ sub parseOpts {
 		{
 			no warnings qw<uninitialized>;
 			my $punct = '([.,!?]\)|\)[.,!?]|[.,;:!?])?';
+			$desc =~ s'/' and ' if $key =~ /harmony-rab-gsab/;
 			$desc =~ s/ wasm( |\.(?:$|\h))/ WASM$1/gi;
 			$desc =~ s/\bmksnapshot\b/\\*(C!$&\\fP/g;
 			$desc =~ s/^Turbofan /TurboFan /gm;
@@ -185,9 +201,12 @@ sub parseOpts {
 			$desc =~ s/^Run regexps with /Execute regular expressions using /i;
 			$desc =~ s/^Temporary(?= disable)/Temporarily/gi;
 			$desc =~ s/ source\K\h(?=map )|\bcontext\K (?=independent code)|\bcall\K (?=counts)/-/gi;
-			$desc =~ s/ top\K\h(?=level[.\h])| tier(?:ing)?\K\h(?=up[.\h])/-/gi;
+			$desc =~ s/ top\K\h(?=level[.\h])| tier(?:ing)?\K\h(?=up[.\h])|\btop\K\h+(?=tier)/-/gi;
+			$desc =~ s/ type checks / type checking /g;
 			$desc =~ s/^Print number of allocations and enable\Ks (analysis mode for) gc fuzz (?=testing)/ $1 GC fuzz-/i;
 			$desc =~ s/\ADisable \Kglobal\.\Z/\n.JS global .\n/;
+			$desc =~ s/ OS\K (specific scheduling) params\b/-$1 parameters/i;
+			$desc =~ s/^Increase\Ks(?= the number)//gi;
 			$desc =~ s/\((\d+) \+ (heap_growing_percent)\/100\)\.?/\n.EQ\n( $1 + $2 \/ 100 ).\n.EN\n/;
 			$desc =~ s/(?<=Disallow )eval\h+(?=and friends\.?$)/\n.`` eval\n/mi;
 			$desc =~ s/(?<=Maximum size of the heap \(in Mbytes\))\h+b(?=.+?semi.space.size\b)/.\nB/i;
@@ -212,8 +231,9 @@ sub parseOpts {
 			$desc =~ s/(?<=Dump )elf(?= objects)/ELF/;
 			$desc =~ s/(?<= )h(?=armony )/H/;
 			$desc =~ s/(?<= after lazy compil)e\b/ation/;
+			$desc =~ s/\b(StubName),(NodeId)\b/\\(oq\\c\n.VAR $1 ,\\c\n.VAR $2 \\(cq.\n/;
 			$desc =~ s/
-				(StubName,NodeId|ll_prof|ASM_UNIMPLEMENTED_BREAK|cputracemark)\b
+				(ll_prof|ASM_UNIMPLEMENTED_BREAK|cputracemark)\b
 				$punct \h*
 			/\n.`` $1 $2\n/gx;
 			$desc =~ s/\b
@@ -225,12 +245,15 @@ sub parseOpts {
 				| Promise(?:\.(?:allSettled|any))?
 				| BigInt(?:\.[\$\w]+)*+
 				| WebAssembly\.compile
-				| (?i:sharedarraybuffer)
+				| (?i:sharedarraybuffer|ResizableArrayBuffer|GrowableSharedArrayBuffer)
 				| (?:[A-Z]\w+)\.prototype (?:\.\w+)* (?:\.\{[^}]+\})?
 				| Object\.fromEntries(?:\(\))?
+				| Object\.hasOwn
 				| import\.meta(?:\.\w+)*
+				| ShadowRealm
 				) $punct \h*
 			/\n.JS $1 $2\n/gx;
+			$desc =~ s/\h+"(Intl\..+?)\h+[vV](\d+)"/ version $2 of "$1"/;
 			$desc =~ s/"(Intl\.\w+)"(\.?)/\n.JS $1 $2\n/g;
 			$desc =~ s/"(Intl\.\w+)\h+([^"]+)"(\.?)/\n.JS $1\n$2$3/g;
 			$desc =~ s/sharedarraybuffer/SharedArrayBuffer/g;
@@ -245,7 +268,16 @@ sub parseOpts {
 			$desc =~ s/^Print WebAssembly code for function at \Kindex\b/\n.VAR $& /i;
 			$desc =~ s/^Number of backtracks.*?before fall\K( back to experimental engine) (if )/ing$1.\nOnly used $2/;
 			$desc =~ s/enable_experimental_regexp_engine_on_excessive_backtracks/--$&/;
-			$desc =~ s/^Use an \KIC /inline cache /g;
+			$desc =~ s/(?:^|\h)Use an \KIC /inline cache /gi;
+			$desc =~ s/(?<=\h)[Ss]mi(?=\h)/\U$&/g;
+			$desc =~ s/\h+switch\h+(?=statement)|clauses in the\K switch(\.)?/\n.JS switch $1\n/g;
+			$desc =~ s/\hby \K(?=asm.js scanner)/the /i;
+			$desc =~ s/ +(Heap::IsAllocationPending) that return (true|false)\h*(\.?)/\n.`` $1\nthat return\n.`` $2 $3/;
+			$desc =~ s/\bJS->Wasm\b/JavaScript-to-WebAssembly/gi;
+			$desc =~ s~{n / caller size}\.?~\n.EQ\n( N / caller-size ).\n.EN\n~i;
+			$desc =~ s/, \K(?=in TF nodes\.?$)/measured /;
+			$desc =~ s/\h+(mprotect|call_ref)(?=[\h.])\h*(\.|,)?/\n.`` $1 $2\n/g;
+			$desc =~ s/dynamic tiering \K\(([^\(\)]+?)\.?$/($1)./;
 			$desc =~ s/^Extra verbose/Use \l$&/;
 			$desc =~ s/"(RegExp Unicode sequence properties)"/$1/;
 			$desc =~ s/\(0 means random\)\K\((with snapshots[^()]+)\)/.\n\u$1/;
@@ -254,11 +286,13 @@ sub parseOpts {
 			$desc =~ s/ <([Nn])> times\b/\n.VAR \u$1\ntimes/gi;
 			$desc =~ s/$matchKeys(?![-_\w])/"\\*(C!".($& =~ y|_|-|r)."\\fP"/eg;
 			$desc =~ s/($matchURL)$punct/\n.LK "$1" $2\n/g;
+			$desc =~ s/^(?:Disable|Enable) \Kexperimental async stacks/the experimental asynchronous stacks/i;
 			$desc =~ s/(?<=\h)lazy new space shrinking\b/new lazy space-shrinking/;
 			$desc =~ s/(?<=\h)optional features on the simulator for testing: (\S+) or ([^\s.]+)\.?\h*$/optional simulator features for testing.\nSupported values are \\(lq$1\\(rq and \\(lq$2\\(rq./gi;
 			$desc =~ s/(?<=\h)(gc[-_]interval|stress[-_]compaction)(?!-)\b/"\\*(C!--".($& =~ tr#_#-#r)."\\fP"/eg;
 			$desc =~ s/code-<pid>-<isolate id>(\.asm\.?)/\n.RI \\(lqcode- pid - isolate-id $1\\(rq/g;
 			$desc =~ s/(?<=\h)(random)\(0,\h*([xX])\)\h*/\\*(CB$1\\fP\\*(CW(0,\\fP\n.VAR $2 )\n/g;
+			$desc =~ s# by \K(bytecode\.length)/X\.?#"\n.EQ\n( ".($1 =~ s/\./"\\."/r)." / X ).\n.EN\n"#ie;
 			$desc =~ s/\bC\+\+/\\*(C+/g;
 			$desc =~ s/\btop-level\h+\Kawait($punct)?/\n.`` await $1\n/g;
 			$desc =~ s/(?<=Disable namespace exports \()[^)\n]+(?=\))/"\\f(CW" . ($& =~ tr|'"|"'|r) . "\\fP"/e;
@@ -274,7 +308,7 @@ sub parseOpts {
 			$desc =~ s/^(?:Disable|Enable) \K"(\n\.JS[^\n]+)\n"([.,])/$1 $2/gm;
 			$desc =~ s/^(?:Disable|Enable) \K"(DateTimeFormat) (formatRange)"/\n.JS $1.$2 /m;
 			$desc =~ s/^(?:Disable|Enable) \K"(dateStyle) (timeStyle)( for DateTimeFormat)"/\\f(CW$1\\fP and \\f(CW$2\\fP$3/m;
-			$desc =~ s/space: \Klimit - size\.?/\n.EQ\n( "limit"\\~ - \\~ "size" ).\n.EN\n/i;
+			$desc =~ s/space: \Klimit - size\.?/\n.EQ\n( "limit\\~" - "\\~size" ).\n.EN\n/i;
 			$desc =~ s/^Allow only natives(?= explicitly\b)/Only allow natives that\\(cqre/gi;
 			$desc =~ s/Perform\K the(?= script streaming)//i;
 			$desc =~ s/ cpu / CPU /i;
@@ -301,12 +335,51 @@ sub parseOpts {
 			$desc =~ s/containing basic block counters for built\Kins\.\s*/-ins /gi;
 			$desc =~ s/^([12])=([^\s.,]+)[.,]?$/\\*(C?$1\\fP selects \\*(C!$2\\fP,/igm;
 			$desc =~ s/^Anything else=([^\s.,]+)[.,]?$/and any other value selects \\*(C!$1\\fP.\n/igm;
+			$desc =~ s/jobs\K( but throw away) result/,$1 the result/;
+			$desc =~ s/\h+\(d8 only\)\h+\((requires [^()]+?)\)\.?$/\n.RB ( d8 1\nonly).\n\u$1./gi;
+			$desc =~ s/^Allocation buffer parking\.$/Disable \l$&/mi;
+			$desc =~ s/^Enable prototype (assume|allow)(?=\h)/\u$1/gi;
+			$desc =~ s/ +(ref\.cast)\b\h*/\n.`` $1\n/gi;
+			$desc =~ s/'until end of block'/\\(lquntil end-of-block\\(rq/i;
+			$desc =~ s/^(?:Disable|Enable) prototype skip\K(?= )/ping of/gi;
+			$desc =~ s/^Enable \Kprototype relaxed simd /relaxed SIMD /i;
+			$desc =~ s/\bv8_enable_ignition_dispatch_counting\b/\\*(C!--v8-enable-ignition-dispatch-counting\\fP/g;
+			$desc =~ s/\h+array find last +(?=helpers\b)/\n.JS Array.findLast\n/gi;
+			$desc =~ s/\h+error cause +(?=property\b)/ the\n.JS Error.cause\n/gi;
+			$desc =~ s/\h+"Intl (BestFitMatcher)"\h*(\.)?/ the\n.JS Intl\n.`` $1\nalgorithm./i;
+			$desc =~ s/\h+"Intl (Enumeration API)"/ the\n.JS Intl\n\l$1/i;
+			$desc =~ s/\h+"Intl (Locale Info)"\h*\.?/\n.JS Intl\nlocale info./i;
+			$desc =~ s/^Enable \K"Temporal"\.?/\n.JS Temporal ./i;
+			$desc =~ s/ +(call\.ref) +/\n.`` $1\n/g;
+			$desc =~ s/ +during +eval\K\.?$/uation./g;
+			$desc =~ s/ +during +streaming\K +compilation(?=\.$)//;
+			$desc =~ s/ visitor behavio\Kr/ur/gi;
+			$desc =~ s'/ic(?=-processor)'/IC';
+			$desc =~ s/ parallel \Kcompile(?= tasks)/compilation/gi;
+			$desc =~ s/ wait \K\[ms\]/(in milliseconds)/i;
+			$desc =~ s/\h*\b(Script::Run)(?!:|->)\b\h*([,\.])?/\n.`` $1 $2\n/g;
+			$desc =~ s/\h+\Kgc(?= tasks)/GC/gi;
+			$desc =~ s/\h+\K>=(?=\h*\d+GB)/\\(rA/gi;
+			$desc =~ s/\h+\K<=(?=\h*\d+GB)/\\(lA/gi;
+			$desc =~ s/^\h+//g;
 			$desc =~ s/\n+$//;
 			
 			if($key eq "no-regexp-tier-up"){
 				$desc  = "Disable regexp interpreter.\n";
 				$desc .= "The default behaviour is to tier-up to the compiler after the number of executions set by";
 				$desc .= " \\*(C!--regexp-tier-up-ticks\\fP";
+			}
+			elsif($key eq "no-concurrent-cache-deserialization"){
+				$desc = "Don't deserialise code caches in background threads.";
+			}
+			elsif($key eq "liftoff-only"){
+				$desc = q'Don\(rqt use TurboFan compilation for WebAssembly.';
+			}
+			elsif($key eq "allocation-buffer-parking"){
+				$desc =~ s/^Disable /Enable /;
+			}
+			elsif($key eq "heap-profiler-show-hidden-objects"){
+				$desc = "Use\n.`` native\nnode-type in snapshots instead of the\n.`` hidden\ntype.";
 			}
 			elsif($key eq "vtune-prof-annotate-wasm"){
 				$desc = "Load WebAssembly source-map and provide annotate support. Used when\n.`` v8_enable_vtunejit\nis enabled.\nExperimental.";
@@ -346,7 +419,7 @@ sub findV8 {
 		(my $ver = `$_ -e 'print(version());'`) =~ s/\s+$//;
 		$versions{$ver} = $_ if $ver =~ m/^[0-9]+(?:\.[0-9]+)*+$/;
 	}
-	my @keys = sort { $b cmp $a } keys %versions;
+	my @keys = sort { version->parse($b) <=> version->parse($a) } keys %versions;
 	return $versions{$keys[0]};
 }
 
