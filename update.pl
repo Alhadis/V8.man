@@ -191,6 +191,7 @@ sub parseOpts {
 			$desc =~ s/ wasm( |\.(?:$|\h))/ WASM$1/gi;
 			$desc =~ s/\bmksnapshot\b/\\*(C!$&\\fP/g;
 			$desc =~ s/^Turbofan /TurboFan /gm;
+			$desc =~ s/\bmaglev\b/\u$&/gi;
 			$desc =~ s/^Print\Ks(?=\s)//gm;
 			$desc =~ s/seriali\Kz(?=ation)/s/gi;
 			$desc =~ s/ js-to-wasm / JS-to-WASM /g;
