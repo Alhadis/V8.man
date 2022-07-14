@@ -108,6 +108,7 @@ sub parseOpts {
 					# Try to negate sentence, but don't try TOO hard
 					unless(
 						$desc =~ s/^Allow/Disallow/i  or
+						$desc =~ s/^Disallow/Allow/i  or
 						$desc =~ s/^Enable/Disable/i  or
 						$desc =~ s/^Include/Exclude/i or
 						$desc =~ s/^(Delay|Verify)/Don't \l$&/i or
@@ -119,7 +120,7 @@ sub parseOpts {
 					){
 						my $replacements_line = __LINE__ + 1;
 						my %replacements = (
-							"abort-on-contradictory-flags" => "Allow flags and implications to override each other.",
+							"opt" => "Optimise code using the TurboFan optimising compiler. Alias of --turbofan.",
 							"feedback-allocation-on-bytecode-size" => "Use a variable-size budget scaled according to bytecode size for lazy feedback vector allocation.",
 							"experimental-flush-embedded-blob-icache" => "Disable an experiment used when evaluating icache flushing on certain CPUs.",
 							"trace-gc-heap-layout-ignore-minor-gc" => "Print trace line before and after minor-gc.",
@@ -280,6 +281,10 @@ sub parseOpts {
 			$desc =~ s/\h+(mprotect|call_ref)(?=[\h.])\h*(\.|,)?/\n.`` $1 $2\n/g;
 			$desc =~ s/dynamic tiering \K\(([^\(\)]+?)\.?$/($1)./;
 			$desc =~ s/^Extra verbose/Use \l$&/;
+			$desc =~ s/^Number of \Kgc(?=s )/GC/;
+			$desc =~ s/ high\K (?=priority[\h.,])/-/gi;
+			$desc =~ s/<value unavailable>([.,]?)\h*/\n.`` <value\\~unavailable> $1\n/g;
+			$desc =~ s/concurrent \KOSR\b/on-stack replacement/g;
 			$desc =~ s/"(RegExp Unicode sequence properties)"/$1/;
 			$desc =~ s/\(0 means random\)\K\((with snapshots[^()]+)\)/.\n\u$1/;
 			$desc =~ s/ <([a-z])> /\n.VAR \u$1\n/gi;
@@ -313,6 +318,8 @@ sub parseOpts {
 			$desc =~ s/^Allow only natives(?= explicitly\b)/Only allow natives that\\(cqre/gi;
 			$desc =~ s/Perform\K the(?= script streaming)//i;
 			$desc =~ s/ cpu / CPU /i;
+			$desc =~ s/: (default) or (cpuid)([,.])?/:\n.`` $1\nor\n.`` $2 $3\n/;
+			$desc =~ s/ Turbofan(?=[\h,.])/ TurboFan/g;
 			$desc =~ s/ wall\K (?=time\b)/-/i;
 			$desc =~ s/^Enable size optimisations for \Kthe (?=code)//i;
 			$desc =~ s/that are not included/that aren't included/i;
@@ -393,6 +400,31 @@ sub parseOpts {
 			}
 			elsif($key eq "allow-overwriting-for-next-flag"){
 				$desc = "Temporarily disable flag contradiction so the next flag gets overwritten.";
+			}
+			elsif($key eq "abort-on-contradictory-flags"){
+				$desc = "Abort program if run with a contradictory combination of flags.";
+			}
+			elsif($key eq "no-abort-on-contradictory-flags"){
+				$desc = "Allow program to run even when called with contradictory flags.";
+			}
+			elsif($key eq "experimental-wasm-ref-cast-nop"){
+				$desc = "Enable unsafe, experimental use of the\n.`` ref.cast_nop\nWebAssembly op-code.";
+			}
+			elsif($key eq "separate-gc-phases"){
+				$desc = "Prevent overlapping between young and full garbage collection phases.";
+			}
+			elsif($key eq "max-opt"){
+				($desc = qq|
+					Set the maximal optimisation tier:
+					.TS
+					l blx .
+					0	Ignition/interpreter
+					1	Sparkplug/Baseline
+					2	Maglev
+					3	TurboFan
+					3+	Any
+					.TE
+				|) =~ s/^\s+|\s+$|(?<=\R)\t+//g;
 			}
 		}
 		

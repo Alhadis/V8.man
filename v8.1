@@ -1,4 +1,4 @@
-'\" e
+'\" et
 .nh   \" Disable hyphenation
 .ad l \" Flush-left
 .
@@ -147,7 +147,7 @@
 .
 .\"======================================================
 .\" BEGIN DOCUMENT
-.TH V8 1 "March 30, 2022" "V8 10.2.40" V8
+.TH V8 1 "July 14, 2022" "V8 10.5.175" V8
 .
 .SH NAME
 .BR v8 " \(em Google\(cqs JavaScript engine
@@ -248,7 +248,7 @@ pertain to a boolean V8 flag enabled by default.
 
 .\" BEGIN SCRAPE
 .V8 no-abort-on-contradictory-flags
-Allow flags and implications to override each other.
+Allow program to run even when called with contradictory flags.
 
 .V8 abort-on-uncaught-exception
 Abort program (dump core) when an uncaught exception is thrown.
@@ -274,14 +274,17 @@ Temporarily disable flag contradiction so the next flag gets overwritten.
 .V8 allow-unsafe-function-constructor
 Allow invoking the function constructor without security checks.
 
-.V8 always-opt
-Always try to optimise functions.
-
 .V8 always-osr
 Always try to OSR functions.
 
 .V8 always-sparkplug
 Directly tier-up to Sparkplug code.
+
+.V8 always-turbofan
+Always try to optimise functions.
+
+.V8 always-use-string-forwarding-table
+Use string forwarding table instead of thin strings for all strings.
 
 .V8 no-analyze-environment-liveness
 Don\(cqt analyse liveness of environment slots and zap dead values.
@@ -310,6 +313,9 @@ Disable subclassing support in built-in methods.
 
 .V8 builtins-in-stack-traces
 Show built-in functions in stack traces.
+
+.V8 bytecode-old-age | Int 5
+Number of GCs before we flush code.
 
 .V8 bytecode-size-allowance-per-tick | Int 1100
 Increase the number of ticks required for optimisation by
@@ -365,6 +371,9 @@ Don't deserialise code caches in background threads.
 .V8 no-concurrent-marking
 Don\(cqt use concurrent marking.
 
+.V8 no-concurrent-osr
+Disable concurrent on-stack replacement.
+
 .V8 no-concurrent-recompilation
 Force synchronous optimisation of hot functions.
 
@@ -377,6 +386,9 @@ The length of the concurrent compilation queue.
 .V8 concurrent-sparkplug
 Compile Sparkplug code in a background thread.
 
+.V8 concurrent-sparkplug-high-priority-threads
+Use high-priority compiler threads for concurrent Sparkplug.
+
 .V8 concurrent-sparkplug-max-threads | Uint 0
 Maximum number of threads that concurrent Sparkplug can use (0 for unbounded).
 
@@ -388,6 +400,9 @@ Suppress certain unspecified behaviours to ease correctness fuzzing:
 abort program when the stack overflows or a string exceeds maximum length (as opposed to throwing
 .JS RangeError ),
 and use a fixed suppression string for error messages.
+
+.V8 cppgc-young-generation
+Run young generation garbage collections in Oilpan.
 
 .V8 cpu-profiler-sampling-interval | Int 1000
 CPU profiler sampling interval in microseconds.
@@ -537,6 +552,9 @@ Deprecated (use \*(C!--arm-arch\fP instead).
 .V8 ephemeron-fixpoint-iterations | Int 10
 Number of fixpoint iterations it takes to switch to linear ephemeron algorithm.
 
+.V8 exit-on-contradictory-flags
+Exit with return code 0 on contradictory flags.
+
 .V8 experimental-async-stack-tagging-api
 Enable the experimental asynchronous stacks tagging API.
 
@@ -546,8 +564,10 @@ Disable an experiment used when evaluating icache flushing on certain CPUs.
 .V8 experimental-stack-trace-frames
 Enable experimental frames (API/Builtins) and stack trace layout.
 
-.V8 experimental-wasm-allow-huge-modules
-Allow WASM modules bigger than 1GB, but below ~2GB.
+.V8 experimental-value-unavailable
+Enable experimental
+.`` <value\~unavailable>
+in scopes.
 
 .V8 experimental-wasm-assume-ref-cast-succeeds
 Assume
@@ -569,6 +589,9 @@ Enable prototype extended constant expressions for WASM.
 .V8 experimental-wasm-gc
 Enable prototype garbage collection for WASM.
 
+.V8 experimental-wasm-instruction-tracing
+Enable prototype instruction tracing section for WASM.
+
 .V8 experimental-wasm-memory64
 Enable prototype
 .`` memory64
@@ -576,6 +599,11 @@ for WASM.
 
 .V8 experimental-wasm-nn-locals
 Allow non-defaultable/non-nullable locals, validated with \(lquntil end-of-block\(rq semantics for WASM.
+
+.V8 experimental-wasm-ref-cast-nop
+Enable unsafe, experimental use of the
+.`` ref.cast_nop
+WebAssembly op-code.
 
 .V8 experimental-wasm-relaxed-simd
 Enable relaxed SIMD for WASM.
@@ -596,6 +624,9 @@ and array and struct operations (unsafe) for WASM.
 
 .V8 experimental-wasm-stack-switching
 Enable prototype stack switching for WASM.
+
+.V8 experimental-wasm-stringref
+Enable prototype reference-typed strings for WASM.
 
 .V8 no-experimental-wasm-threads
 Disable prototype thread opcodes for WASM.
@@ -673,8 +704,8 @@ Force overflows of marking deque by reducing its size to 64 words.
 .V8 force-slow-path
 Always take the slow path for builtins.
 
-.V8 function-context-specialization
-Enable function context specialization in TurboFan.
+.V8 no-freeze-flags-after-init
+Allow changes to flag values after initialising V8.
 
 .V8 future
 Implies all staged features that we want to ship in the not-too-far future.
@@ -704,6 +735,9 @@ Always perform global GCs.
 Garbage collect after
 .VAR N
 allocations.
+
+.V8 gc-memory-reducer-start-delay-ms | Int 8000
+Delay before memory reducer start.
 
 .V8 gc-stats | Int 0
 Used by tracing internally to enable gc statistics.
@@ -744,24 +778,22 @@ Enable array grouping.
 Disable
 .JS Atomics .
 
+.V8 harmony-change-array-by-copy (WIP)
+Enable change-Array-by-copy.
+
 .V8 no-harmony-class-static-blocks
 Disable static initialiser blocks.
-
-.V8 no-harmony-error-cause
-Disable the
-.JS Error.cause
-property.
 
 .V8 harmony-import-assertions (WIP)
 Enable import assertions.
 
-.V8 harmony-intl-best-fit-matcher
+.V8 harmony-intl-best-fit-matcher (WIP)
 Enable the
 .JS Intl
 .`` BestFitMatcher
 algorithm.
 
-.V8 harmony-intl-number-format-v3 (WIP)
+.V8 harmony-intl-number-format-v3
 Enable version 3 of
 .JS Intl.NumberFormat .
 
@@ -769,17 +801,11 @@ Enable version 3 of
 Disable
 .JS Object.hasOwn .
 
-.V8 no-harmony-private-brand-checks
-Disable private brand checks.
-
-.V8 harmony-rab-gsab (WIP)
+.V8 harmony-rab-gsab
 Enable
 .JS ResizableArrayBuffer
 and
 .JS GrowableSharedArrayBuffer .
-
-.V8 no-harmony-relative-indexing-methods
-Disable relative indexing methods.
 
 .V8 harmony-shadow-realm (WIP)
 Enable
@@ -793,7 +819,7 @@ Disable
 Disable all shipped Harmony features.
 
 .V8 harmony-struct (WIP)
-Enable structs and shared structs.
+Enable structs, shared structs, and shared arrays.
 
 .V8 harmony-temporal (WIP)
 Enable
@@ -934,6 +960,9 @@ Don\(rqt use TurboFan compilation for WebAssembly.
 .V8 lite-mode
 Enable trade-off of performance for memory savings.
 
+.V8 no-live-edit-top-frame
+Disable support for live-editing the top-most function on the stack.
+
 .V8 ll-prof
 Enable low-level Linux profiler.
 
@@ -942,9 +971,6 @@ Minimal logging (no API, code, GC, suspect, or handles samples).
 
 .V8 log-all
 Log all events to the log file.
-
-.V8 log-api
-Log API events to the log file.
 
 .V8 log-code
 Log code events to the log file without profiling.
@@ -961,9 +987,6 @@ Log deoptimisation.
 .V8 log-function-events
 Log function events (parse, compile, execute) separately.
 
-.V8 log-handles
-Log global handle events.
-
 .V8 log-ic
 Log inline cache state transitions for tools/IC-processor.
 
@@ -978,9 +1001,6 @@ Don\(cqt log map details.
 
 .V8 log-source-code
 Log source code.
-
-.V8 log-suspect
-Log suspect operations.
 
 .V8 logfile | String \(lqv8.log\(rq
 Specify the
@@ -999,6 +1019,12 @@ Insert an int3 on Maglev entries.
 
 .V8 maglev-filter | String \(lq*\(rq
 Optimisation filter for the Maglev compiler.
+
+.V8 maglev-inlining
+Enable inlining in the Maglev optimising compiler.
+
+.V8 maglev-reuse-stack-slots
+Reuse stack slots in the Maglev optimising compiler.
 
 .V8 manual-evacuation-candidates-selection
 Test mode only flag.
@@ -1033,6 +1059,17 @@ Ignore eager compilation hints.
 .V8 max-old-space-size | size_t 0
 Maximum size of the old space (in MBytes).
 
+.V8 max-opt | Uint 999
+Set the maximal optimisation tier:
+.TS
+l blx .
+0	Ignition/interpreter
+1	Sparkplug/Baseline
+2	Maglev
+3	TurboFan
+3+	Any
+.TE
+
 .V8 max-optimized-bytecode-size | Int 61440
 Maximum bytecode size to be considered for optimisation; too high values may cause the compiler to hit (release) assertions.
 
@@ -1057,6 +1094,9 @@ Don\(cqt use memory reducer.
 .V8 no-memory-reducer-for-small-heaps
 Don\(cqt use memory reducer for small heaps.
 
+.V8 merge-background-deserialized-script-with-compilation-cache
+After deserialising code cache data on a background thread, merge it into an existing Script if one is found in the Isolate compilation cache.
+
 .V8 min-inlining-frequency | Float 0.15
 Minimum frequency for inlining.
 
@@ -1065,9 +1105,6 @@ Minimum size of a semi-space (in MBytes), the new space consists of two semi-spa
 
 .V8 minor-mc
 Perform young generation mark compact GCs.
-
-.V8 minor-mc-sweeping
-Perform sweeping in young generation mark compact GCs.
 
 .V8 minor-mc-trace-fragmentation
 Trace fragmentation after marking.
@@ -1089,7 +1126,7 @@ Disable moving of object starts.
 Don\(cqt generate extra code for manipulating stats counters.
 
 .V8 no-opt
-Don\(cqt use adaptive optimisations.
+Optimise code using the TurboFan optimising compiler. Alias of \*(C!--turbofan\fP.
 
 .V8 optimize-for-size
 Enable optimisations which favour memory size over execution speed.
@@ -1134,7 +1171,7 @@ Enable predictable mode.
 Predictable garbage collection schedule.
 Fixes heap growing, idle, and memory reducing behavior.
 
-.V8 prepare-always-opt
+.V8 prepare-always-turbofan
 Prepare for turning on always opt.
 
 .V8 print-all-code
@@ -1327,6 +1364,9 @@ Disable parsing on background.
 .V8 semi-space-growth-factor | Int 2
 Factor by which to grow the new space.
 
+.V8 separate-gc-phases
+Prevent overlapping between young and full garbage collection phases.
+
 .V8 serialization-statistics
 Collect statistics on serialized objects.
 
@@ -1443,8 +1483,8 @@ Try to validate everything as asm.js.
 .V8 stress-wasm-code-gc
 Stress-test garbage collection of WASM code.
 
-.V8 super-ic
-Use an inline cache for super property loads.
+.V8 no-super-ic
+Don\(cqt use an inline cache for super property loads.
 
 .V8 suppress-asm-messages
 Don\(cqt emit asm.js related messages (for golden file testing).
@@ -1862,6 +1902,9 @@ Trace WASM stack switching.
 .V8 trace-wasm-streaming
 Trace streaming compilation of WASM code.
 
+.V8 trace-wasm-typer
+Trace WASM typer.
+
 .V8 trace-web-snapshot
 Trace web snapshot deserialisation.
 
@@ -1901,8 +1944,8 @@ Compress translation arrays (experimental).
 .V8 no-turbo-escape
 Disable escape analysis.
 
-.V8 turbo-fast-api-calls
-Enable fast API calls from TurboFan.
+.V8 no-turbo-fast-api-calls
+Disable fast API calls from TurboFan.
 
 .V8 turbo-filter | String \(lq*\(rq
 Optimisation filter for TurboFan compiler.
@@ -1996,16 +2039,20 @@ Don\(cqt verify register allocation in TurboFan.
 .V8 turbo-verify-machine-graph | String \(lq\(rq
 Verify TurboFan machine graph before instruction selection.
 
+.V8 no-turbofan
+Don\(cqt use the TurboFan optimising compiler.
+
+.V8 turboshaft
+Enable TurboFan\(cqs Turboshaft phases.
+
+.V8 turboshaft-trace-reduction
+Trace individual Turboshaft reduction steps.
+
 .V8 no-unbox-double-arrays
 Don\(cqt automatically unbox arrays of doubles.
 
 .V8 use-external-strings
 Use external strings for source code.
-
-.V8 no-use-full-record-write-builtin
-Don\(cqt force use of the full version of the
-.`` RecordWrite
- built-in.
 
 .V8 no-use-ic
 Don\(cqt use inline caching.
@@ -2043,6 +2090,7 @@ Don\(cqt verify graph generated by simplified lowering.
 .V8 no-verify-snapshot-checksum
 Don\(cqt verify snapshot checksums when deserialising snapshots.
 Enable checksum creation and verification for code caches.
+Enabled by default in debug builds and once per process for Android.
 
 .V8 vtune-prof-annotate-wasm
 Load WebAssembly source-map and provide annotate support. Used when
@@ -2066,8 +2114,8 @@ Disable garbage collection of WASM code.
 .V8 wasm-debug-mask-for-testing | Int 0
 Bitmask of functions to compile for debugging, only applies if the tier is Liftoff.
 
-.V8 wasm-dynamic-tiering
-Enable dynamic tier-up to the optimising compiler.
+.V8 no-wasm-dynamic-tiering
+Disable dynamic tier-up to the optimising compiler.
 
 .V8 wasm-enforce-bounds-checks
 Enforce explicit bounds check even if the trap handler is available.
@@ -2084,14 +2132,8 @@ Disallow use of the generic JS-to-WASM wrapper instead of per-signature wrappers
 .V8 wasm-inlining
 Enable inlining of WASM functions into WASM functions (experimental).
 
-.V8 wasm-inlining-budget-factor | size_t 75000
-Maximum allowed size to inline a function is given by
-.EQ
-( N / caller-size ).
-.EN
-
-.V8 wasm-inlining-max-size | size_t 1000
-Maximum size of a function that can be inlined, measured in TF nodes.
+.V8 wasm-inlining-budget | size_t 9000
+Maximum graph size (in TF nodes) that allows inlining more.
 
 .V8 wasm-lazy-compilation
 Enable lazy compilation for all WASM modules.
@@ -2101,6 +2143,9 @@ Enable lazy validation for lazily-compiled WASM functions.
 
 .V8 wasm-loop-peeling
 Enable loop peeling for WASM functions.
+
+.V8 wasm-loop-peeling-max-size | size_t 1000
+Maximum size for peeling.
 
 .V8 no-wasm-loop-unrolling
 Disable loop unrolling for WASM functions.
@@ -2117,11 +2162,17 @@ Maximum size of the initial WASM code space reservation (in MB).
 .V8 wasm-max-mem-pages | Uint 65536
 Maximum number of 64KiB memory pages per WASM memory.
 
+.V8 wasm-max-module-size | size_t 1073741824
+Maximum allowed size of WASM modules.
+
 .V8 wasm-max-table-size | Uint 10000000
 Maximum table size of a WASM instance.
 
 .V8 no-wasm-memory-protection-keys
 Don\(cqt protect WASM code memory with PKU if available (takes precedence over \*(C!--wasm-write-protect-code-memory\fP).
+
+.V8 no-wasm-native-module-cache-enabled
+Disable the native module cache.
 
 .V8 wasm-num-compilation-tasks | Int 128
 Maximum number of parallel compilation tasks for WASM.
@@ -2157,6 +2208,15 @@ Only tier-up function with this index.
 
 .V8 wasm-tiering-budget | Int 1800000
 Budget for dynamic tiering (rough approximation of bytes executed).
+
+.V8 wasm-trace-native | String \(lq\(rq
+Select which native code sequence to use for WASM trace instruction:
+.`` default
+or
+.`` cpuid .
+
+.V8 wasm-type-canonicalization
+Apply isorecursive canonicalisation on WASM types.
 
 .V8 no-wasm-write-protect-code-memory
 Don\(cqt write protect code memory on the WASM native heap with
