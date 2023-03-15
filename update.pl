@@ -61,9 +61,10 @@ sub parseOpts {
 		
 		# Extract metadata used by .V8 macro
 		my $flag = "";
-		$flag = " (WIP)"       if ($_ =~ s/\h*\(in progress\)\.?\h*$/./m);
+		$flag = " (WIP)"       if ($_ =~ s/\h*\(in progress(?: +\/ +experimental)?\)\.?\h*$/./m);
 		$flag = " (INTERNAL)"  if ($_ =~ s/\h*\(for internal use only\)\.?\h*$/./m);
 		$flag = " (TEST)"      if ($_ =~ s/\h* - testing only(?=\)?\h*$)//m);
+		$flag = " (WIP)"       if ($_ =~ s/^Experimental:\h+(\w)/\u$1/i);
 
 
 		# Typos and ad-hoc formatting fixes
@@ -76,6 +77,8 @@ sub parseOpts {
 		s/(?<=\s)an unit/a unit/g;
 		s/(?<=\w with)\K(?=the \w)/ /g;
 		s/\(in M\Kb(?=ytes\))/B/gi;
+		s/^Indicate\Ks(?=\s)//gi;
+		s/(?<=\s|^)etw stack walking for windows/ETW (Event Tracking for Windows) stack walking./i;
 
 		# Format the switch's type and default value
 		my $desc = $_;
@@ -111,7 +114,9 @@ sub parseOpts {
 						$desc =~ s/^Disallow/Allow/i  or
 						$desc =~ s/^Enable/Disable/i  or
 						$desc =~ s/^Include/Exclude/i or
-						$desc =~ s/^(Delay|Verify)/Don't \l$&/i or
+						$desc =~ s/^This mode tries/Try/i or
+						$desc =~ s/^(Delay|Verify|Insert|Internali[sz])/Don't \l$&/i or
+						$desc =~ s/^Re-?use(?= stack slots)/Discard/i or
 						$desc =~ s/^(
 							Abort|Add|Allocate|Automatically|Analy[zs]e|Cache|Compact|Elide|Expose|Fall[- ]?back|Filter|
 							Free|Generate|Get|Increase|Inline|Intrinsify|Log|Optimi[sz]e|Perform|Pretenure|Promote|Protect|Put|
@@ -121,6 +126,7 @@ sub parseOpts {
 						my $replacements_line = __LINE__ + 1;
 						my %replacements = (
 							"opt" => "Optimise code using the TurboFan optimising compiler. Alias of --turbofan.",
+							"merge-background-deserialized-script-with-compilation-cache" => "Don't merge deserialised code cache data into existing scripts found within the Isolate compilation cache.",
 							"feedback-allocation-on-bytecode-size" => "Use a variable-size budget scaled according to bytecode size for lazy feedback vector allocation.",
 							"experimental-flush-embedded-blob-icache" => "Disable an experiment used when evaluating icache flushing on certain CPUs.",
 							"trace-gc-heap-layout-ignore-minor-gc" => "Print trace line before and after minor-gc.",
@@ -129,6 +135,10 @@ sub parseOpts {
 							"adjust-os-scheduling-parameters" => "Don't adjust OS-specific scheduling parameters for the isolate.",
 							"allocation-buffer-parking" => "Disable buffer parking.",
 							"baseline-batch-compilation" => "Don't batch compile Sparkplug code.",
+							"concurrent-sparkplug" => "Don't compile Sparkplug code in background threads",
+							"global-ic-updated-flag" => "Cease tracking of inline cache changes, normally used in tier-up heuristics.",
+							"omit-default-ctors" => "Omit calls to default constructors in bytecode.",
+							"shortcut-strings-with-stack" => "Don't shortcut strings during garbage collection with stacks",
 							"text-is-readable" => "Don't try to read embedded `.text` sections in binary.",
 							"concurrent-allocation" => "Don't concurrently allocate in old space.",
 							"builtin-subclassing" => "Disable subclassing support in built-in methods.",
@@ -191,15 +201,29 @@ sub parseOpts {
 			$desc =~ s'/' and ' if $key =~ /harmony-rab-gsab/;
 			$desc =~ s/ wasm( |\.(?:$|\h))/ WASM$1/gi;
 			$desc =~ s/\bmksnapshot\b/\\*(C!$&\\fP/g;
+			$desc =~ s/(?<= non-)turbofan(?= code)/TurboFan/g;
 			$desc =~ s/^Turbofan /TurboFan /gm;
 			$desc =~ s/\bmaglev\b/\u$&/gi;
-			$desc =~ s/^Print\Ks(?=\s)//gm;
+			$desc =~ s/ (static-roots\.h)\b/\n.`` $1 /;
+			$desc =~ s/^(Print|Fast\h+forward)\Ks(?=\s)//gmi;
+			$desc =~ s/\b(fast)\h+(forward)\b/$1-$2/gi;
 			$desc =~ s/seriali\Kz(?=ation)/s/gi;
+			$desc =~ s/128 to 256 bit/128\\(en to 256\\(enbit/gi;
+			$desc =~ s/revectorisation for Web\Kassembly(?= SIMD)/\u$&/;
 			$desc =~ s/ js-to-wasm / JS-to-WASM /g;
 			$desc =~ s/^Check that there are not\b/Check there aren't/;
 			$desc =~ s/\bheap_stats\b([.)]*)/\n.`` heap_stats $1\n/g;
 			$desc =~ s/(?:code statistics after|handles at) \KGC\b| after \KGC\b/garbage collection/gi;
 			$desc =~ s/^(Used with --perf-prof),\s*(load WASM source map and provide annotate support)/\u$2 when \l$1/i;
+			$desc =~ s/^This mode is used for checking that V8 behaves predictably(\.?)/Check that V8 behaves predictably$1/i;
+			$desc =~ s/^(?:Enable|Disable)( final types) as (default for )(wasm-gc)/Use$1 by $2\n.`` $3\n/i;
+			$desc =~ s|; other heap size flags \(e\.g\. ([a-zA-Z0-9_]+)(?=\) take precedence)|".\nOther heap-size flags (e.g., --".($1 =~ tr#_#-#r)|egi;
+			$desc =~ s/^Write\K (?=protect )/-/gi;
+			$desc =~ s/ speciali\Kz(?=ation )/s/gi;
+			$desc =~ s/^This flag is typically not set explicitly\K (?=but\b)/,\n/im;
+			$desc =~ s/^Whether Maglev \Kresets(?= the)/should reset/i;
+			$desc =~ s/^MinorMC task trigger in percent/MinorMC task trigger, specified as a percentage/i;
+			$desc =~ s/Print verbose deopt\K(?= info)/imisation/i;
 			$desc =~ s/^Run regexps with /Execute regular expressions using /i;
 			$desc =~ s/^Temporary(?= disable)/Temporarily/gi;
 			$desc =~ s/ source\K\h(?=map )|\bcontext\K (?=independent code)|\bcall\K (?=counts)/-/gi;
@@ -240,6 +264,7 @@ sub parseOpts {
 			/\n.`` $1 $2\n/gx;
 			$desc =~ s/\b
 				( Error\.stack
+				| Array\.fromAsync
 				| ArrayBuffer
 				| Atomics\.waitAsync
 				| RangeError
@@ -260,6 +285,18 @@ sub parseOpts {
 			$desc =~ s/"(Intl\.\w+)\h+([^"]+)"(\.?)/\n.JS $1\n$2$3/g;
 			$desc =~ s/sharedarraybuffer/SharedArrayBuffer/g;
 			$desc =~ s/ [Jj]avascript / JavaScript /g;
+			$desc =~ s/ optimise call math\.min\/max with double array/ optimise calls to\n.JS Math.min\nor\n.JS Math.max\nwhen called with a double array/i;
+			$desc =~ s/ built with\K (v8_enable_builtins_profiling=true)\b/\n.`` $1 /i;
+			$desc =~ s/\bmaglev\b/\u$&/g;
+			$desc =~ s/^Use TurboFan\K(?= fast string)/'s/i;
+			$desc =~ s/ turboshaft / Turboshaft /gi;
+			$desc =~ s/ use \Klibm trig functions\b/\n.`` libm\ntrigonometry functions/gi;
+			$desc =~ s/, (?=useful for bisecting optimisation bugs)/.\n\l/gi;
+			$desc =~ s/ from the\K(\.text) +(section(?:[.,]|$|\s))/\n.`` $1\n$2/g;
+			$desc =~ s/near\K (\.text) (section)\b/\n.`` $1\n$2/g;
+			$desc =~ s/, 0 for\K (NumberOfWorkerThreads)(\.?)$/\n.`` $1 $2\n/g;
+			$desc =~ s/^(Trace Maglev inlining) \(verbose\)/Verbosely \l$1/;
+			$desc =~ s/^Trace WASM revectorise\b/Trace WASM revectorisation/i;
 			$desc =~ s/\bblock\K (?=profiling\b)/-/gi;
 			$desc =~ s/"(well-formed) (JSON\.stringify)"\./$1\n.JS $2 ./;
 			$desc =~ s/\.? \((for testing)\.?\)\.?/.\nUsed $1./i;
@@ -293,6 +330,9 @@ sub parseOpts {
 			$desc =~ s/$matchKeys(?![-_\w])/"\\*(C!".($& =~ y|_|-|r)."\\fP"/eg;
 			$desc =~ s/($matchURL)$punct/\n.LK "$1" $2\n/g;
 			$desc =~ s/^(?:Disable|Enable) \Kexperimental async stacks/the experimental asynchronous stacks/i;
+			$desc =~ s/^(?:Disable|Enable) \Kchange-Array-by-copy\.?$/\n.JS Array.prototype\nmethods that return a modified copy of the original./i;
+			$desc =~ s/^(?:Disable|Enable) \Kjson parse with source\b/source-text access from\n.JS JSON.parse\nreviver functions/i;
+			$desc =~ s/ +String#\{is,to}WellFormed\b/\n.JS String.isWellFormed\nand\n.JS String.toWellFormed\nmethods/g;
 			$desc =~ s/(?<=\h)lazy new space shrinking\b/new lazy space-shrinking/;
 			$desc =~ s/(?<=\h)optional features on the simulator for testing: (\S+) or ([^\s.]+)\.?\h*$/optional simulator features for testing.\nSupported values are \\(lq$1\\(rq and \\(lq$2\\(rq./gi;
 			$desc =~ s/(?<=\h)(gc[-_]interval|stress[-_]compaction)(?!-)\b/"\\*(C!--".($& =~ tr#_#-#r)."\\fP"/eg;
@@ -306,10 +346,13 @@ sub parseOpts {
 			$desc =~ s/(?:Can|Don|Hasn|Won|Shouldn|Wouldn)\K'(?=t )/\\(cq/gi;
 			$desc =~ s/^(?=New background|Less compaction)./Use \l$&/im;
 			$desc =~ s/ease correctness fuzzing: \KAbort/\L$&/i;
+			$desc =~ s/prototype inline small WASM(?= functions)/prototype inlining of small WebAssembly/i;
 			$desc =~ s/^(Include|Exclude)\Ks(?=\h)//gmi;
 			$desc =~ s/^(Disable|Enable) "(Add calendar and numberingSystem to DateTimeFormat)"/$2/mi;
 			$desc =~ s/^(Disable|Enable) "(DateTimeFormat) (other) (calendars)"/$1 $3 $2 $4/mi;
 			$desc =~ s/^(Disable|Enable) "(Unified Intl.NumberFormat )(Features)"/$1 \l$2\l$3/mi;
+			$desc =~ s/^(Disable|Enable) "(Intl) (DurationFormat) API"([.,]?)/$1 $2.$3 API$4/i;
+			$desc =~ s/^(Disable|Enable) "(JavaScript iterator helpers)"/$1 $2/i;
 			$desc =~ s/^(Disable|Enable)s /$1 /gmi;
 			$desc =~ s/^(?:Disable|Enable) \K"(\n\.JS[^\n]+)\n"([.,])/$1 $2/gm;
 			$desc =~ s/^(?:Disable|Enable) \K"(DateTimeFormat) (formatRange)"/\n.JS $1.$2 /m;
@@ -412,6 +455,9 @@ sub parseOpts {
 			}
 			elsif($key eq "separate-gc-phases"){
 				$desc = "Prevent overlapping between young and full garbage collection phases.";
+			}
+			elsif($key eq "no-harmony-symbol-as-weakmap-key"){
+				$desc = "Forbid the use of\n.JS Symbol\nvalues as\n.JS WeakMap\nkeys.";
 			}
 			elsif($key eq "max-opt"){
 				($desc = qq|
